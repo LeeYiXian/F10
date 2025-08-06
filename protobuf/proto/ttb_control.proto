@@ -1,0 +1,73 @@
+syntax = "proto3";
+ 
+//send topic "ttb_control"
+//rec topic  "ttb_re"
+message TtbSet {
+    TtbOperation operation=1;      // 转台操作分类
+    TtbMode set_mode=2;            // 转台模式设置
+    TtbSetVel set_vel=3;        // 转台速度模式下，速度类
+
+    TtbSetPos set_pos_x=5;      // 转台位置模式下，x轴位置类
+    TtbSetPos set_pos_y=6;      // 转台位置模式下，y轴位置类
+    uint64 hb=7;                    // 消息计数器
+}
+
+ 
+message  TtbSetVel{
+    float  vel_X=1;                  // 转台速度x
+    float  vel_y=2;                  // 转台速度y
+}
+
+message TtbSetPos{
+    double  pos=1;                  // 位置/radar模式下，目标位置，单位:度
+    float  pos_max_vel=2;          // 位置模式下,速度上限
+}
+
+ 
+enum TtbOperation {
+     TTB_NO_CMD=0;                  // 无命令,定时发，充当心跳包
+     TTB_MODE=1;                    // 模式选择   
+     TTB_SET_VEL=2;                 // 设置转台速度
+     TTB_SET_POS_X=4;               // 设置转台位置X
+     TTB_SET_POS_Y=5;               // 设置转台位置Y
+     TTB_REOOT=6;                   // 重启
+}
+
+message TtbRe{
+    uint64 run_count=1;             // 消息计数器
+    TtbMode now_ttb_mode=2;        // 转台当前模式
+    TtbState state=3;                  //
+    
+    
+    double get_ttb_angle_x=5;       // 转台x角度，单位：度
+    double get_ttb_angle_y=6;       // 转台y角度，单位：度
+    float get_ttb_vel_x=7;         // 转台x速度，单位：度/秒
+    float get_ttb_vel_y=8;         // 转台y速度，单位：度/秒
+    
+ 
+
+}
+
+message TtbState {
+
+uint32 drv_state_x=6;
+uint32 drv_state_y=7;
+uint32 drv_err_x=8;
+uint32 drv_err_y=9;
+uint32 rotary_state=10;
+
+uint32 err_code=27;
+
+string versions=100;
+
+}
+
+
+enum TtbMode {
+    TTB_DISABLE=0;                  // 不使能模式,在该模式下,转台可以由摇杆控制
+    TTB_EN_STOP=0x10;                  // 使能模式,在该模式下,转台卡死，禁止摇杆控制
+    TTB_VEL=0x20;   
+    TTB_POS=0x30;                      // 位置模式
+}
+
+

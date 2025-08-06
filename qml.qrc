@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/qt/qml/f10system">
+        <file>main.qml</file>
+    </qresource>
+</RCC>
