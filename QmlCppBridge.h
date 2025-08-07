@@ -20,4 +20,5 @@ public slots:
 private:
     NetworkManager* m_networkManager;
     SerialPort* m_serialPort;
+
 };

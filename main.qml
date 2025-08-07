@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import FluentUI 1.0
@@ -148,7 +148,7 @@ ApplicationWindow {
                                         }
                                         text: "开启"
                                         onClicked: {
-                                            bridge.sendtoCpp("switchmechanism.open‌")
+                                            bridge.sendtoCpp({"method":"switchmechanism.open‌"})
                                         }
                                     }
 
@@ -161,7 +161,7 @@ ApplicationWindow {
                                         }
                                         text: "关闭"
                                         onClicked: {
-                                            bridge.sendtoCpp("switchmechanism.close")
+                                            bridge.sendtoCpp({"method":"switchmechanism.close"})
                                         }
                                     }
             
@@ -174,7 +174,7 @@ ApplicationWindow {
                                         }
                                         text: "寻零"
                                         onClicked: {
-                                            bridge.sendtoCpp("switchmechanism.findzero")
+                                            bridge.sendtoCpp({"method":"switchmechanism.findzero"})
                                         }
                                     }  
                                 }
@@ -267,7 +267,7 @@ ApplicationWindow {
                                     }
 
                                     FluComboBox {
-                                        Layout.preferredWidth: 250  // 使用Layout.preferredWidth代替width
+                                        Layout.preferredWidth: 200  // 使用Layout.preferredWidth代替width
                                         Layout.preferredHeight: 50  // 使用Layout.preferredHeight代替height
                                         font.pixelSize: 22
         
@@ -279,9 +279,19 @@ ApplicationWindow {
                                             ListElement { text: "3档" }
                                             ListElement { text: "4档" }
                                         }
-                                        onAccepted: {
-                                            if (find(editText) === -1)
-                                                model.append({text: editText})
+                                    }
+
+                                    FluButton {
+                                        Layout.preferredWidth: 150
+                                        Layout.preferredHeight: 50
+                                        
+                                        font {
+                                            family: "SimSun"
+                                            pixelSize: 20
+                                        }
+                                        text: "下发"
+                                        onClicked: {
+                                            bridge.sendtoCpp({"method":"filterwheel.setgear‌","value": model.currentText})
                                         }
                                     }
                                 }
@@ -377,7 +387,7 @@ ApplicationWindow {
                                         }
                                         text:"开启"
                                         onClicked: {
-
+                                            bridge.sendtoCpp({"method":"waveplate.open‌"})
                                         }
                                     }
 
@@ -393,7 +403,7 @@ ApplicationWindow {
                                         }
                                         text:"关闭"
                                         onClicked: {
-
+                                            bridge.sendtoCpp({"method":"waveplate.close"})
                                         }
                                     }
                                     
@@ -409,7 +419,7 @@ ApplicationWindow {
                                         }
                                         text:"寻零"
                                         onClicked: {
-
+                                            bridge.sendtoCpp({"method":"waveplate.findzero"})
                                         }
                                     }  
                                 }
@@ -583,18 +593,22 @@ ApplicationWindow {
                         
                         LSControlPanel{
                             titleText: "支撑平台方位"
+                            bridge: bridge
                         }
 
                         LSControlPanel{
                             titleText: "支撑平台俯仰"
+                            bridge: bridge
                         }
 
                         LSControlPanel{
                             titleText: "支撑平台高低"
+                            bridge: bridge
                         }
 
                         LSControlPanel{
                             titleText: "升降台"
+                            bridge: bridge
                         }
                         //支撑平台方位
                         /*

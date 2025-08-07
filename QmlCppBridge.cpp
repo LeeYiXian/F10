@@ -9,49 +9,55 @@ QmlCppBridge::QmlCppBridge(QObject * parent)
 {
     m_networkManager = new NetworkManager();
     m_serialPort = new SerialPort();
+
+
+
 }
 
-void QmlCppBridge::sendtoCpp(const QVariant& data) {
-
-    
-
-    //滤光轮控制
-    if (data.toString() == "switchmechanism.open‌")
+void QmlCppBridge::sendtoCpp(const QVariant& data)
+{
+    if (!data.canConvert<QVariantMap>())
     {
-        //
-
-    }
-    else if (data.toString() == "switchmechanism.close‌")
-    {
-
-    }
-    else if (data.toString() == "switchmechanism.findzero‌")
-    {
-
+        qDebug() << "Invalid data type";
+        return;
     }
 
-	else if (data.toString() == "shakingtable.open‌")
-	{
-        QVariantMap map = data.toMap();
+	QVariantMap map = data.toMap();
+	QString method = map["method"].toString();
 
-        int chl = map["chl"].toInt();
-        int wave = map["wave"].toInt();
-        int peak = map["peak"].toInt();
-        int fre = map["fre"].toInt();
-        int offset = map["offset"].toInt();
+	method.remove(QChar(0x200C));  // 显式移除零宽非连接符
 
-        QByteArray data;
-        //组装数据
-
-
-        m_serialPort->sendData(data);
-	}
-
-    else if (data.toString() == "shakingtable.close‌")
+    if (method == "switchmechanism.open")
+    {
+        
+    }
+    else if (method == "switchmechanism.close")
     {
 
     }
+    else if (method == "switchmechanism.findzero")
+    {
 
+    }
+    else if (method == "filterwheel.setgear‌")
+    {
+        //取出挡位值
+        int index = map["value"].toInt();
+
+
+    }
+    else if (method == "waveplate.open")
+    {
+
+    }
+    else if (method == "waveplate.close")
+    {
+    }
+    else if (method == "waveplate.findzero")
+    {
+
+
+    }
 }
 
 void QmlCppBridge::onReceivedMsg(const QVariant& params)

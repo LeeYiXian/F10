@@ -7,6 +7,7 @@ import com.company.bridge 1.0
 //支撑平台方位
 CardPage {
     property var titleText: ""
+    property var bridge
     anchors.leftMargin: 45
     title: titleText
     Column {
@@ -30,7 +31,7 @@ CardPage {
                 }
                 text:"使能"
                 onClicked: {
-
+                    
                 }
             }
 
