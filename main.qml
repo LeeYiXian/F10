@@ -594,22 +594,27 @@ ApplicationWindow {
                         LSControlPanel{
                             titleText: "支撑平台方位"
                             bridge: bridge
+                            code: "platform.x"
                         }
 
                         LSControlPanel{
                             titleText: "支撑平台俯仰"
                             bridge: bridge
+                            code: "platform.y"
                         }
 
                         LSControlPanel{
                             titleText: "支撑平台高低"
                             bridge: bridge
+                            code: "platform.z"
                         }
 
                         LSControlPanel{
                             titleText: "升降台"
                             bridge: bridge
+                            code: "platform.hight"
                         }
+                        
                         //支撑平台方位
                         /*
                         CardPage {

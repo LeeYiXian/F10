@@ -4,10 +4,10 @@ import QtQuick.Layouts 1.15
 import FluentUI 1.0
 import com.company.bridge 1.0
 
-//支撑平台方位
 CardPage {
     property var titleText: ""
     property var bridge
+    property var code: ""
     anchors.leftMargin: 45
     title: titleText
     Column {
@@ -31,7 +31,7 @@ CardPage {
                 }
                 text:"使能"
                 onClicked: {
-                    
+                    bridge.sendtoCpp({"method": "supportplatform.enable","target":code});
                 }
             }
 
@@ -47,7 +47,7 @@ CardPage {
                 }
                 text:"停止"
                 onClicked: {
-
+                    bridge.sendtoCpp({"method": "supportplatform.stop","target":code});
                 }
             }
         }
@@ -64,6 +64,7 @@ CardPage {
             }
                                     
             FluMultilineTextBox{
+                id: positionInput
                 Layout.preferredWidth:150
                 disabled: false
             }
@@ -76,6 +77,7 @@ CardPage {
             }
 
             FluMultilineTextBox{
+                id: speedInput
                 Layout.preferredWidth:150
                 disabled: false
             }
@@ -96,7 +98,7 @@ CardPage {
                 }
                 text:"前进"
                 onClicked: {
-
+                    bridge.sendtoCpp({"method": "supportplatform.forward","speed":speedInput.text,"target":code});
                 }
             }
 
@@ -112,7 +114,7 @@ CardPage {
                 }
                 text:"后退"
                 onClicked: {
-
+                    bridge.sendtoCpp({"method": "supportplatform.backward","speed":speedInput.text,"target":code});
                 }
             }
 
@@ -128,7 +130,7 @@ CardPage {
                 }
                 text:"绝对定位"
                 onClicked: {
-
+                    bridge.sendtoCpp({"method": "supportplatform.position","position":positionInput.text,"speed":speedInput.text,"target":code});
                 }
             }
         }

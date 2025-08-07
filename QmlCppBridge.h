@@ -8,6 +8,7 @@ class QmlCppBridge : public QObject {
 public:
     explicit QmlCppBridge(QObject* parent = nullptr);
 
+    void handleSupportPlatformTarget(QVariantMap);
 signals:
     //zmq收到的数据传给qml展示
     void sendtoQml(const QVariant& data);

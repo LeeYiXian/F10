@@ -58,6 +58,119 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 
 
     }
+
+    else if (method == "supportplatform.enable")
+    {
+        QString target  = map["target"].toString();
+        qDebug()<<"target:"<<target;
+        if (target == "platform.x")
+        {
+            //发给支撑平台方位
+            
+        }
+        else if (target == "platform.y")
+        {
+            //发给支撑平台俯仰
+        }
+        else if (target == "platform.z")
+        {
+            //发给支撑平台高低
+        }
+        else if (target == "platform.height")
+        {
+            //发给大升降台
+        }
+        
+    }
+    else if (method == "supportplatform.stop")
+    {
+		QString target = map["target"].toString();
+		qDebug() << "target:" << target;
+		if (target == "platform.x")
+		{
+			//发给支撑平台方位
+
+		}
+		else if (target == "platform.y")
+		{
+			//发给支撑平台俯仰
+		}
+		else if (target == "platform.z")
+		{
+			//发给支撑平台高低
+		}
+		else if (target == "platform.height")
+		{
+			//发给大升降台
+		}
+    }
+    else if (method == "supportplatform.forward")
+    {
+		QString target = map["target"].toString();
+		qDebug() << "target:" << target;
+		if (target == "platform.x")
+		{
+			//发给支撑平台方位
+
+		}
+		else if (target == "platform.y")
+		{
+			//发给支撑平台俯仰
+		}
+		else if (target == "platform.z")
+		{
+			//发给支撑平台高低
+		}
+		else if (target == "platform.height")
+		{
+			//发给大升降台
+		}
+    }
+    else if (method == "supportplatform.backward")
+    {
+		QString target = map["target"].toString();
+		qDebug() << "target:" << target;
+		if (target == "platform.x")
+		{
+			//发给支撑平台方位
+
+		}
+		else if (target == "platform.y")
+		{
+			//发给支撑平台俯仰
+		}
+		else if (target == "platform.z")
+		{
+			//发给支撑平台高低
+		}
+		else if (target == "platform.height")
+		{
+			//发给大升降台
+		}
+    }
+    else if (method == "supportplatform.position")
+    {
+
+		QString target = map["target"].toString();
+		qDebug() << "target:" << target;
+		if (target == "platform.x")
+		{
+			//发给支撑平台方位
+
+		}
+		else if (target == "platform.y")
+		{
+			//发给支撑平台俯仰
+		}
+		else if (target == "platform.z")
+		{
+			//发给支撑平台高低
+		}
+		else if (target == "platform.height")
+		{
+			//发给大升降台
+		}
+    }
 }
 
 void QmlCppBridge::onReceivedMsg(const QVariant& params)
