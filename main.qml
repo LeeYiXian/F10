@@ -1029,7 +1029,7 @@ ApplicationWindow {
                                         text:"开始"
                                         onClicked: {
                                             //下发震动指令
-                                            bridge.sendtoCpp({"cmd":"‌shakingtable.open","chl":"x","wave":waveCombox1.currentIndex,"peak":peakText1.text,"freq":freqText1.text,"offset":offsetText1.text})
+                                            bridge.sendtoCpp({"method":"‌shakingtable.open","chl":"x","wave":waveCombox1.currentIndex,"peak":peakText1.text,"freq":freqText1.text,"offset":offsetText1.text})
                                         }
                                     }
 
@@ -1045,7 +1045,7 @@ ApplicationWindow {
                                         }
                                         text:"停止"
                                         onClicked: {
-
+                                            bridge.sendtoCpp({"method":"‌shakingtable.close","chl":"x"})
                                         }
                                     }
                                 }
@@ -1216,7 +1216,7 @@ ApplicationWindow {
                                         text:"开始"
                                         onClicked: {
                                             //下发震动指令
-                                            bridge.sendtoCpp({"cmd":"‌shakingtable.open","chl":"y","wave":waveCombox2.currentIndex,"peak":peakText2.text,"freq":freqText2.text,"offset":offsetText2.text})
+                                            bridge.sendtoCpp({"method":"‌shakingtable.open","chl":"y","wave":waveCombox2.currentIndex,"peak":peakText2.text,"freq":freqText2.text,"offset":offsetText2.text})
                                         }
                                     }
 
@@ -1232,7 +1232,7 @@ ApplicationWindow {
                                         }
                                         text:"停止"
                                         onClicked: {
-
+                                            bridge.sendtoCpp({"method":"‌shakingtable.close","chl":"y"})
                                         }
                                     }
                                     

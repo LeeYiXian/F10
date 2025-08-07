@@ -26,7 +26,7 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 	QString method = map["method"].toString();
 
 	method.remove(QChar(0x200C));  // 显式移除零宽非连接符
-
+	qDebug() << "method:" << method;
     if (method == "switchmechanism.open")
     {
         
@@ -39,7 +39,7 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
     {
 
     }
-    else if (method == "filterwheel.setgear‌")
+    else if (method == "filterwheel.setgear")
     {
         //取出挡位值
         int index = map["value"].toInt();
@@ -171,6 +171,30 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 			//发给大升降台
 		}
     }
+	//微震动台x轴
+	else if (method == "shakingtable.open")
+	{
+		if (map["chl"].toString() == "x")//微震动台x轴
+		{
+
+		}
+		else if (map["chl"].toString() == "y")//微震动台y轴
+		{
+
+		}
+	}
+	else if (method == "shakingtable.close")
+	{
+		if (map["chl"].toString() == "x")//微震动台x轴
+		{
+
+		}
+		else if (map["chl"].toString() == "y")//微震动台y轴
+		{
+
+		}
+	}
+
 }
 
 void QmlCppBridge::onReceivedMsg(const QVariant& params)
