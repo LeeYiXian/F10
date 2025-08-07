@@ -5,7 +5,7 @@ NetworkManager::NetworkManager(QObject * parent)
 	connect(m_socket, &QTcpSocket::connected, this, &NetworkManager::onConnected);
 	connect(m_socket, &QTcpSocket::disconnected, this, &NetworkManager::onDisconnected);
 	connect(m_socket, &QTcpSocket::errorOccurred,this, &NetworkManager::onError);
-
+	connect(m_socket, &QTcpSocket::readyRead, this, &NetworkManager::handleReadyRead);
 }
 
 void NetworkManager::connectToDevice(const QString& ip, quint16 port) {
@@ -39,3 +39,8 @@ void NetworkManager::onError(QAbstractSocket::SocketError error) {
 	emit connectionChanged(false);
 }
 
+void NetworkManager::handleReadyRead()
+{
+	QByteArray data = m_socket->readAll();
+	emit dataReceived(data);
+}

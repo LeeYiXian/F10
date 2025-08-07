@@ -73,11 +73,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="filterWheel.cpp" />
+    <ClCompile Include="linearguiderail.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="protobuf\pb\ttb_control.pb.cc" />
     <ClCompile Include="QmlCppBridge.cpp" />
     <ClCompile Include="SerialPort.cpp" />
+    <ClCompile Include="stm2038b.cpp" />
     <None Include="CardPage.qml" />
     <None Include="LSControlPanel.qml" />
     <None Include="protobuf\proto\ttb_control.proto" />
@@ -96,7 +99,10 @@
     <QtMoc Include="NetworkManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="filterWheelImpl.h" />
+    <ClInclude Include="linearguiderailimpl.h" />
     <ClInclude Include="protobuf\pb\ttb_control.pb.h" />
+    <ClInclude Include="stm2038bimpl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

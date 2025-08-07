@@ -4,15 +4,26 @@
 #include <QDateTime>
 #include <QThread>
 
+#define MAX_SEND_BUFFER_SIZE 256
+
 QmlCppBridge::QmlCppBridge(QObject * parent)
     : QObject(parent) 
 {
     m_networkManager = new NetworkManager();
     m_serialPort = new SerialPort();
 
+	connect(m_networkManager, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
+	connect(m_serialPort, &SerialPort::dataReceived, this, &QmlCppBridge::handleReceivedSerialData);
 
+	m_timer = new QTimer(this);
+	connect(m_timer, &QTimer::timeout, [this]() {
+		//组装查询
 
+	});
+	m_timer->start(200);
 }
+
+
 
 void QmlCppBridge::sendtoCpp(const QVariant& data)
 {
@@ -26,38 +37,146 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 	QString method = map["method"].toString();
 
 	method.remove(QChar(0x200C));  // 显式移除零宽非连接符
-	qDebug() << "method:" << method;
-    if (method == "switchmechanism.open")
-    {
-        
-    }
-    else if (method == "switchmechanism.close")
-    {
+	//发送的数据和长度
+	char outBuffer[MAX_SEND_BUFFER_SIZE] = { 0 };
+	int sendLen = 0;
 
-    }
-    else if (method == "switchmechanism.findzero")
-    {
+	if (method == "switchmechanism.open")
+	{
+		sendLen = m_linearGuiderailImpl->moveByStep(1, 90000, outBuffer);
 
-    }
-    else if (method == "filterwheel.setgear")
-    {
-        //取出挡位值
-        int index = map["value"].toInt();
+		//todo:发送给设备
+	}
+	else if (method == "switchmechanism.close")
+	{
+		sendLen = m_linearGuiderailImpl->moveByStep(1, -90000, outBuffer);
 
+		//todo:发送给设备
+	}
+	else if (method == "switchmechanism.findzero")
+	{
+		sendLen = m_linearGuiderailImpl->motorZeroing(1, outBuffer);
 
-    }
-    else if (method == "waveplate.open")
-    {
+		//todo:发送给设备
+	}
+	else if (method == "filterwheel.setgear‌")
+	{
+		//取出挡位值
+		int index = map["value"].toInt();
+		if (1 == index)
+		{
+			sendLen = m_filterWheelImpl->moveToSetPosition(index, 1600, outBuffer);
 
-    }
-    else if (method == "waveplate.close")
-    {
-    }
-    else if (method == "waveplate.findzero")
-    {
+			//todo:发送给设备
+		}
+		else if (2 == index)
+		{
+			sendLen = m_filterWheelImpl->moveToSetPosition(index, 3200, outBuffer);
+			//todo:发送给设备
+		}
+		else if (3 == index)
+		{
+			sendLen = m_filterWheelImpl->moveToSetPosition(index, 4800, outBuffer);
 
+			//todo:发送给设备
+		}
+		else if (4 == index)
+		{
+			sendLen = m_filterWheelImpl->moveToSetPosition(index, 6400, outBuffer);
 
-    }
+			//todo:发送给设备
+		}
+		else
+		{
+			qDebug() << "Invalid filter wheel index";
+			return;
+		}
+
+	}
+	else if (method == "waveplate.open")
+	{
+		//设置控制模式
+		sendLen = m_stm2038BImpl->setContorMode(1, outBuffer);
+
+		//todo:发送给设备 
+
+		//设置工作模式
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::POSITION_CONTROL, outBuffer);
+
+		//todo:发送给设备
+
+		//设置目标位置
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->setTargetPosition(1, 1600, outBuffer);
+
+		//todo:发送给设备
+
+		//电机使能
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->motorEnablement(1, outBuffer);
+
+		//todo:发送给设备
+
+		//运动到指定位置
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->moveToSetPosition(1, 1600, outBuffer);
+
+		//todo:发送给设备
+
+	}
+	else if (method == "waveplate.close")
+	{
+		//设置控制模式
+		sendLen = m_stm2038BImpl->setContorMode(1, outBuffer);
+
+		//todo:发送给设备 
+
+		//设置工作模式
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::POSITION_CONTROL, outBuffer);
+
+		//todo:发送给设备
+
+		//设置目标位置
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->setTargetPosition(1, 1600, outBuffer);
+
+		//todo:发送给设备
+
+		//电机使能
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->motorEnablement(1, outBuffer);
+
+		//todo:发送给设备
+
+		//运动到指定位置
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->moveToSetPosition(1, 1600, outBuffer);
+
+		//todo:发送给设备
+
+	}
+	else if (method == "waveplate.findzero")
+	{
+		//设置控制模式
+		sendLen = m_stm2038BImpl->setContorMode(1, outBuffer);
+
+		//todo:发送给设备 
+
+		//设置工作模式
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::ZEROPOINT_MODEING, outBuffer);
+
+		//todo:发送给设备
+
+		//电机使能
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = m_stm2038BImpl->motorEnablement(1, outBuffer);
+
+		//todo:发送给设备
+
+	}
 
     else if (method == "supportplatform.enable")
     {
@@ -194,6 +313,17 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 
 		}
 	}
+
+
+}
+
+void QmlCppBridge::handleReceivedSerialData(const QByteArray& data)
+{
+
+}
+
+void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
+{
 
 }
 

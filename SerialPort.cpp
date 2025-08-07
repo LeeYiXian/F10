@@ -27,13 +27,6 @@ SerialPort::~SerialPort()
     disconnectDevice();
 }
 
-void SerialPort::adjustFocus(float value)
-{
-	if (m_serial && m_serial->isOpen()) {
-		//把值传下去
-	}
-}
-
 /**
  * @brief 检查串口是否已连接
  * @return bool 连接状态

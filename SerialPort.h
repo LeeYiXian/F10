@@ -33,8 +33,6 @@ public:
      */
     ~SerialPort();
 
-    Q_INVOKABLE void adjustFocus(float value);  // 直接通过槽函数处理
-
     /**
      * @brief 获取当前连接状态
      * @return true表示已连接，false表示未连接

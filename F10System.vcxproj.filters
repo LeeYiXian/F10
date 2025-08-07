@@ -30,6 +30,9 @@
     <Filter Include="protobuf\proto">
       <UniqueIdentifier>{42fffc1a-e230-474d-9809-7adfa9356dbd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="qml">
+      <UniqueIdentifier>{9c7ff7bf-a32f-40e6-b5a4-fe1bafbeceb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -38,9 +41,6 @@
     <QtRcc Include="qml.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
-    <None Include="main.qml">
-      <Filter>Source Files</Filter>
-    </None>
     <ClCompile Include="QmlCppBridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -53,22 +53,34 @@
     <ClCompile Include="protobuf\pb\ttb_control.pb.cc">
       <Filter>protobuf\pb</Filter>
     </ClCompile>
+    <ClCompile Include="filterWheel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linearguiderail.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stm2038b.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="OpticalPanel.qml">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="CardPage.qml">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="LSControlPanel.qml">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="protobuf\proto\ttb_control.proto">
       <Filter>protobuf\proto</Filter>
     </None>
     <None Include="ToggleSwitch.qml">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="CardPage.qml">
+      <Filter>qml</Filter>
+    </None>
+    <None Include="LSControlPanel.qml">
+      <Filter>qml</Filter>
+    </None>
+    <None Include="OpticalPanel.qml">
+      <Filter>qml</Filter>
+    </None>
+    <None Include="main.qml">
+      <Filter>qml</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +97,15 @@
   <ItemGroup>
     <ClInclude Include="protobuf\pb\ttb_control.pb.h">
       <Filter>protobuf\pb</Filter>
+    </ClInclude>
+    <ClInclude Include="filterWheelImpl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linearguiderailimpl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stm2038bimpl.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

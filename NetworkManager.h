@@ -15,10 +15,11 @@ public:
 	//Q_INVOKABLE void upgradeFirmware(const char* filePath)
 	bool isConnected() const;
 
+	void handleReadyRead();
 signals:
 	void connectionChanged(bool connected);
 	void errorOccurred(const QString& error);
-
+	void dataReceived(const QByteArray& data);
 private slots:
 	void onConnected();
 	void onDisconnected();
