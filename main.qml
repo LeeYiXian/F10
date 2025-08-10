@@ -291,7 +291,7 @@ ApplicationWindow {
                                         }
                                         text: "下发"
                                         onClicked: {
-                                            bridge.sendtoCpp({"method":"filterwheel.setgear‌","value": model.currentText})
+                                            bridge.sendtoCpp({"method":"filterwheel.setgear‌","value": model.currentIndex})
                                         }
                                     }
                                 }

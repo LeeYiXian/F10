@@ -16,6 +16,7 @@ public:
 	bool isConnected() const;
 
 	void handleReadyRead();
+	qint64 sendData(const QByteArray& data);
 signals:
 	void connectionChanged(bool connected);
 	void errorOccurred(const QString& error);

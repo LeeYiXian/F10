@@ -9,173 +9,111 @@
 QmlCppBridge::QmlCppBridge(QObject * parent)
     : QObject(parent) 
 {
-    m_networkManager = new NetworkManager();
-    m_serialPort = new SerialPort();
+	m_switchMechanismNetMgr = new NetworkManager();
+	m_filterWheelNetMgr = new NetworkManager();
+	m_wavePlateNetMgr = new NetworkManager();
 
-	connect(m_networkManager, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
+	m_linearGuiderailImpl = new LinearGuideRailImpl();
+	m_filterWheelImpl = new FilterWheelImpl();
+	m_stm2038BImpl = new Stm2038bImpl();
+
+	//根据地址修改
+	m_switchMechanismNetMgr->connectToDevice("127.0.0.1", 1234);
+	m_filterWheelNetMgr->connectToDevice("127.0.0.1", 1235);
+	m_wavePlateNetMgr->connectToDevice("127.0.0.1", 1236);
+
+	connect(m_switchMechanismNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
+	connect(m_filterWheelNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
+	connect(m_wavePlateNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
+
+
+    m_serialPort = new SerialPort();
 	connect(m_serialPort, &SerialPort::dataReceived, this, &QmlCppBridge::handleReceivedSerialData);
 
-	m_timer = new QTimer(this);
-	connect(m_timer, &QTimer::timeout, [this]() {
-		//组装查询
+	QThread* thread = new QThread();
+	auto worker = [=]() {
+		while (true)
+		{
+			//切换机构状态查询
 
-	});
-	m_timer->start(200);
+			//滤光轮状态查询
+
+			//波片状态查询
+
+			QThread::msleep(200);
+		}
+	};
+	QObject::connect(thread, &QThread::started, worker);
+	QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+	thread->start();
 }
-
-
 
 void QmlCppBridge::sendtoCpp(const QVariant& data)
 {
-    if (!data.canConvert<QVariantMap>())
-    {
-        qDebug() << "Invalid data type";
-        return;
-    }
+	if (!data.canConvert<QVariantMap>()) {
+		qDebug() << "Invalid data type";
+		return;
+	}
 
 	QVariantMap map = data.toMap();
 	QString method = map["method"].toString();
-
 	method.remove(QChar(0x200C));  // 显式移除零宽非连接符
-	//发送的数据和长度
+
 	char outBuffer[MAX_SEND_BUFFER_SIZE] = { 0 };
 	int sendLen = 0;
 
-	if (method == "switchmechanism.open")
-	{
-		sendLen = m_linearGuiderailImpl->moveByStep(1, 90000, outBuffer);
+	auto sendToDevice = [&](auto netMgr, auto action) {
+		memset(outBuffer, 0, sizeof(outBuffer));
+		sendLen = action();
+		netMgr->sendData(QByteArray(outBuffer, sendLen));
+		};
 
-		//todo:发送给设备
+	if (method == "switchmechanism.open") {
+		sendToDevice(m_switchMechanismNetMgr, [&] {
+			return m_linearGuiderailImpl->moveByStep(1, 90000, outBuffer);
+			});
 	}
-	else if (method == "switchmechanism.close")
-	{
-		sendLen = m_linearGuiderailImpl->moveByStep(1, -90000, outBuffer);
-
-		//todo:发送给设备
+	else if (method == "switchmechanism.close") {
+		sendToDevice(m_switchMechanismNetMgr, [&] {
+			return m_linearGuiderailImpl->moveByStep(1, -90000, outBuffer);
+			});
 	}
-	else if (method == "switchmechanism.findzero")
-	{
-		sendLen = m_linearGuiderailImpl->motorZeroing(1, outBuffer);
-
-		//todo:发送给设备
+	else if (method == "switchmechanism.findzero") {
+		sendToDevice(m_switchMechanismNetMgr, [&] {
+			return m_linearGuiderailImpl->motorZeroing(1, outBuffer);
+			});
 	}
-	else if (method == "filterwheel.setgear‌")
-	{
-		//取出挡位值
+	else if (method == "filterwheel.setgear") {
 		int index = map["value"].toInt();
-		if (1 == index)
-		{
-			sendLen = m_filterWheelImpl->moveToSetPosition(index, 1600, outBuffer);
-
-			//todo:发送给设备
-		}
-		else if (2 == index)
-		{
-			sendLen = m_filterWheelImpl->moveToSetPosition(index, 3200, outBuffer);
-			//todo:发送给设备
-		}
-		else if (3 == index)
-		{
-			sendLen = m_filterWheelImpl->moveToSetPosition(index, 4800, outBuffer);
-
-			//todo:发送给设备
-		}
-		else if (4 == index)
-		{
-			sendLen = m_filterWheelImpl->moveToSetPosition(index, 6400, outBuffer);
-
-			//todo:发送给设备
-		}
-		else
-		{
+		static const QMap<int, int> gearMap = {
+			{0, 1600}, {1, 3200}, {2, 4800}, {3, 6400}
+		};
+		if (!gearMap.contains(index)) {
 			qDebug() << "Invalid filter wheel index";
 			return;
 		}
-
+		sendToDevice(m_filterWheelNetMgr, [&] {
+			return m_filterWheelImpl->moveToSetPosition(index, gearMap[index], outBuffer);
+			});
 	}
-	else if (method == "waveplate.open")
-	{
-		//设置控制模式
-		sendLen = m_stm2038BImpl->setContorMode(1, outBuffer);
-
-		//todo:发送给设备 
-
-		//设置工作模式
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::POSITION_CONTROL, outBuffer);
-
-		//todo:发送给设备
-
-		//设置目标位置
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->setTargetPosition(1, 1600, outBuffer);
-
-		//todo:发送给设备
-
-		//电机使能
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->motorEnablement(1, outBuffer);
-
-		//todo:发送给设备
-
-		//运动到指定位置
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->moveToSetPosition(1, 1600, outBuffer);
-
-		//todo:发送给设备
-
+	else if (method == "waveplate.open") {
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setContorMode(1, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::POSITION_CONTROL, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setTargetPosition(1, 1600, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->motorEnablement(1, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->moveToSetPosition(1, 1600, outBuffer); });
 	}
-	else if (method == "waveplate.close")
-	{
-		//设置控制模式
-		sendLen = m_stm2038BImpl->setContorMode(1, outBuffer);
-
-		//todo:发送给设备 
-
-		//设置工作模式
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::POSITION_CONTROL, outBuffer);
-
-		//todo:发送给设备
-
-		//设置目标位置
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->setTargetPosition(1, 1600, outBuffer);
-
-		//todo:发送给设备
-
-		//电机使能
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->motorEnablement(1, outBuffer);
-
-		//todo:发送给设备
-
-		//运动到指定位置
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->moveToSetPosition(1, 1600, outBuffer);
-
-		//todo:发送给设备
-
+	else if (method == "waveplate.close") {
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setContorMode(1, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::POSITION_CONTROL, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setTargetPosition(1, 1600, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->motorEnablement(1, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->moveToSetPosition(1, 1600, outBuffer); });
 	}
-	else if (method == "waveplate.findzero")
-	{
-		//设置控制模式
-		sendLen = m_stm2038BImpl->setContorMode(1, outBuffer);
-
-		//todo:发送给设备 
-
-		//设置工作模式
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::ZEROPOINT_MODEING, outBuffer);
-
-		//todo:发送给设备
-
-		//电机使能
-		memset(outBuffer, 0, sizeof(outBuffer));
-		sendLen = m_stm2038BImpl->motorEnablement(1, outBuffer);
-
-		//todo:发送给设备
-
+	else if (method == "waveplate.findzero") {
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setContorMode(1, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->setWorkMode(1, m_stm2038BImpl->workModes::ZEROPOINT_MODEING, outBuffer); });
+		sendToDevice(m_wavePlateNetMgr, [&] { return m_stm2038BImpl->motorEnablement(1, outBuffer); });
 	}
 
     else if (method == "supportplatform.enable")
@@ -324,6 +262,21 @@ void QmlCppBridge::handleReceivedSerialData(const QByteArray& data)
 
 void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
 {
+	//判断信号来自哪个sender
+	QObject* sender = QObject::sender();
+
+	if (sender == m_switchMechanismNetMgr)
+	{
+		//todo:处理接收到的切换机构数据
+	}
+	else if (sender == m_filterWheelNetMgr)
+	{
+		//todo:处理接收到的滤光轮数据
+	}
+	else if (sender == m_wavePlateNetMgr)
+	{
+		//todo:处理接收到的波片数据
+	}
 
 }
 

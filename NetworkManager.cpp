@@ -44,3 +44,12 @@ void NetworkManager::handleReadyRead()
 	QByteArray data = m_socket->readAll();
 	emit dataReceived(data);
 }
+
+qint64 NetworkManager::sendData(const QByteArray& data)
+{
+	if (!m_connected || !m_socket) {
+		emit errorOccurred(tr("Not connected to device"));
+		return -1;
+	}
+	return m_socket->write(data);
+}

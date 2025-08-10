@@ -25,10 +25,13 @@ public slots:
 public slots:
     void onReceivedMsg(const QVariant& params);
 private:
-    NetworkManager* m_networkManager;
     SerialPort* m_serialPort;
-    QTimer* m_timer;
 	FilterWheelImpl* m_filterWheelImpl;
 	LinearGuideRailImpl* m_linearGuiderailImpl;
 	Stm2038bImpl* m_stm2038BImpl;
+
+	NetworkManager* m_switchMechanismNetMgr;  // 切换机构
+	NetworkManager* m_filterWheelNetMgr;  // 滤光轮
+    NetworkManager* m_wavePlateNetMgr;    // 波片
+    
 };
