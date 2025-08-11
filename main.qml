@@ -154,7 +154,6 @@ ApplicationWindow {
                                         text: "开启"
                                         onClicked: {
                                             bridge.sendtoCpp({"method":"switchmechanism.open‌"})
-                                            operationPopup.showMessage("提示", "机构已成功开启,sdfa fsd asdf asdf sdfasdfs DSDGsdfSDfsdfasd fasd fasdf asdf asd")
                                         }
                                     }
 
