@@ -16,6 +16,11 @@ ApplicationWindow {
     property color pressedColor: "#4a90e2"
     property color checkedColor: "#4a90e2"
 
+    PopupDialog {
+        id: operationPopup
+        anchors.centerIn: parent
+    }
+
     QmlCppBridge{
 
         id: bridge
@@ -149,6 +154,7 @@ ApplicationWindow {
                                         text: "开启"
                                         onClicked: {
                                             bridge.sendtoCpp({"method":"switchmechanism.open‌"})
+                                            operationPopup.showMessage("提示", "机构已成功开启,sdfa fsd asdf asdf sdfasdfs DSDGsdfSDfsdfasd fasd fasdf asdf asd")
                                         }
                                     }
 
@@ -356,8 +362,6 @@ ApplicationWindow {
                                 }
                             }
                         }
-
-
 
                         //波片切换机构
                         CardPage {

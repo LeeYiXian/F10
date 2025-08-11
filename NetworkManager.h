@@ -16,16 +16,18 @@ public:
 	bool isConnected() const;
 
 	void handleReadyRead();
-	qint64 sendData(const QByteArray& data);
+	
 signals:
 	void connectionChanged(bool connected);
 	void errorOccurred(const QString& error);
 	void dataReceived(const QByteArray& data);
+public slots:
+	qint64 onSendData(const QByteArray& data);
 private slots:
 	void onConnected();
 	void onDisconnected();
 	void onError(QAbstractSocket::SocketError error);
-
+	
 private:
 	QTcpSocket* m_socket;
 	bool m_connected;

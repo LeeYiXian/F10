@@ -62,6 +62,9 @@
     <ClCompile Include="stm2038b.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AxisClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="protobuf\proto\ttb_control.proto">
@@ -80,6 +83,9 @@
       <Filter>qml</Filter>
     </None>
     <None Include="main.qml">
+      <Filter>qml</Filter>
+    </None>
+    <None Include="PopupDialog.qml">
       <Filter>qml</Filter>
     </None>
   </ItemGroup>
@@ -106,6 +112,12 @@
     </ClInclude>
     <ClInclude Include="stm2038bimpl.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AxisClass.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Loggers.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

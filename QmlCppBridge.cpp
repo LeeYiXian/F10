@@ -3,7 +3,6 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QThread>
-
 #define MAX_SEND_BUFFER_SIZE 256
 
 QmlCppBridge::QmlCppBridge(QObject * parent)
@@ -65,7 +64,10 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 	auto sendToDevice = [&](auto netMgr, auto action) {
 		memset(outBuffer, 0, sizeof(outBuffer));
 		sendLen = action();
-		netMgr->sendData(QByteArray(outBuffer, sendLen));
+
+		QMetaObject::invokeMethod(netMgr,
+			[=]() { netMgr->onSendData(QByteArray(outBuffer, sendLen)); },
+			Qt::QueuedConnection);
 	};
 
 	if (method == "switchmechanism.open") {
@@ -290,7 +292,7 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 		// 通过SerialPort发送
 		m_serialPort->sendData(QByteArray((const char*)packet, 6));
 		qDebug() << "Sent stop packet (6 bytes)";
-		}
+	}
 		// 处理实时电压读取
 	else if (method == "shakingtable.readVoltage") {
 		QString chl = map["chl"].toString();
@@ -463,7 +465,6 @@ void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
 	{
 		//todo:处理接收到的波片数据
 	}
-
 }
 
 void QmlCppBridge::onReceivedMsg(const QVariant& params)

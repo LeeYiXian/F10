@@ -48,12 +48,13 @@
       </Command>
     </PreBuildEvent>
     <Link>
-      <AdditionalDependencies>libprotobuf-lite.lib;libprotobuf.lib;libprotoc.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\protobuf\libprotobuf;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libprotobuf-lite.lib;libprotobuf.lib;libprotoc.lib;LTDMC.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>.\ltdmc\lib64;.\protobuf\libprotobuf;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>D:\900-F10\ltdmc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
@@ -73,6 +74,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AxisClass.cpp" />
     <ClCompile Include="filterWheel.cpp" />
     <ClCompile Include="linearguiderail.cpp" />
     <ClCompile Include="main.cpp" />
@@ -83,6 +85,7 @@
     <ClCompile Include="stm2038b.cpp" />
     <None Include="CardPage.qml" />
     <None Include="LSControlPanel.qml" />
+    <None Include="PopupDialog.qml" />
     <None Include="protobuf\proto\ttb_control.proto" />
     <None Include="ToggleSwitch.qml" />
     <None Include="OpticalPanel.qml" />
@@ -99,8 +102,10 @@
     <QtMoc Include="NetworkManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AxisClass.h" />
     <ClInclude Include="filterWheelImpl.h" />
     <ClInclude Include="linearguiderailimpl.h" />
+    <ClInclude Include="Loggers.h" />
     <ClInclude Include="protobuf\pb\ttb_control.pb.h" />
     <ClInclude Include="stm2038bimpl.h" />
   </ItemGroup>
