@@ -113,11 +113,14 @@
     <ClInclude Include="stm2038bimpl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Loggers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="AxisClass.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Loggers.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Utils.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

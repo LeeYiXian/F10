@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.15
 
 Rectangle {
     property string title: ""
-    property bool isOnline: true  // 添加在线状态属性
+    property bool isOnline: false  // 添加在线状态属性
     property bool statusVisible: true  // 添加状态指示灯可见性属性
     Layout.minimumWidth: 500
     height: 320

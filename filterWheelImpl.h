@@ -28,7 +28,7 @@ public:
     int moveToSetPosition(int addr, int position, char* outBuffer);
 
     //电机向前运动，step为负时反转
-    int moveByStep(int addr, int step, int speed, int acceleration, int offset, char* outBuffer);
+    int moveByStep(int addr, int step, char* outBuffer);
 
     //停止转动且归零位
     int motorZeroing(int addr, char* outBuffer);//暂不支持

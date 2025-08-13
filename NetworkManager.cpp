@@ -1,27 +1,71 @@
 #include "NetworkManager.h"
 #include <QThread>
-NetworkManager::NetworkManager(QObject * parent)
-	: QObject(parent), m_socket(new QTcpSocket(this)), m_connected(false) {
-
-	// 创建网络线程
+#include <QDateTime>
+NetworkManager::NetworkManager(QObject* parent)
+	: QObject(parent), m_socket(nullptr), m_connected(false)
+{
 	QThread* netThread = new QThread(this);
-	this->moveToThread(netThread);
-	m_socket->moveToThread(netThread);
 
-	connect(netThread, &QThread::finished, m_socket, &QObject::deleteLater);
+	connect(netThread, &QThread::finished, this, &QObject::deleteLater);
+
+	this->moveToThread(netThread);
+
+	// 在线程启动后，在该线程中创建 socket
+	connect(netThread, &QThread::started, this, &NetworkManager::initSocket, Qt::QueuedConnection);
+
+	netThread->start();
+
+	m_reconnectTimer = new QTimer(this);
+	connect(m_reconnectTimer, &QTimer::timeout, this, &NetworkManager::attemptReconnect);
+	m_reconnectTimer->setInterval(2000); // 每2秒尝试一次
+	m_reconnectTimer->setSingleShot(false);
+}
+
+void NetworkManager::initSocket()
+{
+	m_socket = new QTcpSocket(this);
 
 	connect(m_socket, &QTcpSocket::connected, this, &NetworkManager::onConnected);
 	connect(m_socket, &QTcpSocket::disconnected, this, &NetworkManager::onDisconnected);
-	connect(m_socket, &QTcpSocket::errorOccurred,this, &NetworkManager::onError);
+	connect(m_socket, &QTcpSocket::errorOccurred, this, &NetworkManager::onError);
 	connect(m_socket, &QTcpSocket::readyRead, this, &NetworkManager::handleReadyRead);
 
-	// 启动线程
-	netThread->start();
+	emit socketReady(); // 通知外部 socket 可用了
 }
 
 void NetworkManager::connectToDevice(const QString& ip, quint16 port) {
 	if (m_connected) return;
-	m_socket->connectToHost(ip, port);
+	m_ip = ip;
+	m_port = port;
+	m_socket->connectToHost(m_ip, m_port);
+	if (!m_socket->waitForConnected(3000)) {
+		qDebug() << "Connection failed:" << m_socket->errorString();
+		startReconnect();
+	}
+	stopReconnect();
+}
+
+void NetworkManager::startReconnect()
+{
+	if (!m_reconnectTimer->isActive()) {
+		qDebug() << "Starting reconnect attempts...";
+		m_reconnectTimer->start();
+	}
+}
+
+void NetworkManager::stopReconnect()
+{
+	if (m_reconnectTimer->isActive()) {
+		qDebug() << "Connected. Stopping reconnect attempts.";
+		m_reconnectTimer->stop();
+	}
+}
+
+void NetworkManager::attemptReconnect()
+{
+	qDebug() << "Attempting to reconnect to laser device...";
+
+	connectToDevice(m_ip, m_port);
 }
 
 void NetworkManager::disconnectDevice() {
@@ -56,11 +100,16 @@ void NetworkManager::handleReadyRead()
 	emit dataReceived(data);
 }
 
-qint64 NetworkManager::onSendData(const QByteArray& data)
+void NetworkManager::onSendData(const QByteArray& data)
 {
 	if (!m_connected || !m_socket) {
 		emit errorOccurred(tr("Not connected to device"));
-		return -1;
+		return;
 	}
-	return m_socket->write(data);
+
+	// 打印发送的数据（十六进制，空格分隔）
+	qDebug() << "Send Data (" << data.size() << "bytes):" << data.toHex(' ').toUpper();
+
+	m_socket->write(data);
+	QThread::msleep(100); // 延时100毫秒，等待数据发送完毕
 }

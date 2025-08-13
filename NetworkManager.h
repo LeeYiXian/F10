@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
-
+#include <QTimer>
 class NetworkManager : public QObject {
 	Q_OBJECT
 		Q_PROPERTY(bool connected READ isConnected NOTIFY connectionChanged)
@@ -16,13 +16,20 @@ public:
 	bool isConnected() const;
 
 	void handleReadyRead();
+
+	void initSocket();
 	
+	void startReconnect();          // 启动重连定时器
+	void stopReconnect();           // 停止重连定时器
 signals:
 	void connectionChanged(bool connected);
 	void errorOccurred(const QString& error);
 	void dataReceived(const QByteArray& data);
+	void socketReady();
 public slots:
-	qint64 onSendData(const QByteArray& data);
+	void onSendData(const QByteArray& data);
+
+	void attemptReconnect();         // 定时器触发，尝试重连
 private slots:
 	void onConnected();
 	void onDisconnected();
@@ -31,6 +38,9 @@ private slots:
 private:
 	QTcpSocket* m_socket;
 	bool m_connected;
+	QTimer* m_reconnectTimer = nullptr;
+	QString m_ip;
+	int m_port;
 };
 
 #endif

@@ -78,7 +78,7 @@ int FilterWheelImpl::moveToSetPosition(int addr, int position, char* outBuffer)
     //return 21;
 }
 
-int FilterWheelImpl::moveByStep(int addr, int step, int speed, int acceleration, int offset, char* outBuffer)
+int FilterWheelImpl::moveByStep(int addr, int step, char* outBuffer)
 {
     outBuffer[0] = addr;//电机地址
     outBuffer[1] = 0x10;//功能码
@@ -92,16 +92,29 @@ int FilterWheelImpl::moveByStep(int addr, int step, int speed, int acceleration,
     outBuffer[6] = 0x0C;
 
     //四个字节的int
-    memcpy(outBuffer + 7, &step, 4);
-
+    //memcpy(outBuffer + 7, &step, 4);
+    outBuffer[7] = (step >> 24) & 0xFF;
+    outBuffer[8] = (step >> 16) & 0xFF;
+    outBuffer[9] = (step >> 8) & 0xFF;
+    outBuffer[10] = step & 0xFF;
+    
     outBuffer[11] = 0x00;
     outBuffer[12] = 0x00;
+   
+    outBuffer[13] = 0x00;
+    outBuffer[14] = 0x64;
+    
+    outBuffer[15] = 0x00;
+    outBuffer[16] = 0xFA;
+    
+    outBuffer[17] = 0x00;
+    outBuffer[18] = 0x0A;
 
-    memcpy(outBuffer + 13, &speed, 2);
+    /*memcpy(outBuffer + 13, &speed, 2);
 
     memcpy(outBuffer + 15, &acceleration, 2);
 
-    memcpy(outBuffer + 17, &offset, 2);
+    memcpy(outBuffer + 17, &offset, 2);*/
 
     //校验位
     char calcData[2];
@@ -118,25 +131,35 @@ int FilterWheelImpl::motorZeroing(int addr, char* outBuffer)
     outBuffer[1] = 0x10;//功能码
 
     outBuffer[2] = 0x00;//寄存器地址
-    outBuffer[3] = 0x02;
+    outBuffer[3] = 0x40;
 
     outBuffer[4] = 0x00;//寄存器个数
-    outBuffer[5] = 0x02;
+    outBuffer[5] = 0x06;
 
-    outBuffer[6] = 0x04;
+    outBuffer[6] = 0x0C;
 
-    outBuffer[7] = 0x00;
-    outBuffer[8] = 0x00;
-    outBuffer[9] = 0x00;
+    outBuffer[7] = 0xFF;
+    outBuffer[8] = 0xFF;
+    outBuffer[9] = 0x06;
     outBuffer[10] = 0x00;
+
+    outBuffer[11] = 0x00;
+    outBuffer[12] = 0x00;
+    outBuffer[13] = 0x00;
+    outBuffer[14] = 0x64;
+    
+    outBuffer[15] = 0x00;
+    outBuffer[16] = 0xFA;
+    outBuffer[17] = 0x00;
+    outBuffer[18] = 0x0A;
 
     //校验位
     char calcData[2];
-    modBusCRC(outBuffer, 11, calcData);
-    outBuffer[11] = calcData[0];
-    outBuffer[12] = calcData[1];
+    modBusCRC(outBuffer, 19, calcData);
+    outBuffer[19] = calcData[0];
+    outBuffer[20] = calcData[1];
 
-    return 13;
+    return 21;
 }
 
 int FilterWheelImpl::motorEnablement(int addr, char* outBuffer)
@@ -196,7 +219,7 @@ void FilterWheelImpl::modBusCRC(const char* data, int cnt, char* outData)
     uint16_t wCrc = 0xFFFF;  // CRC 初始值
 
     for (int i = 0; i < cnt; i++) {
-        wCrc ^= (uint16_t)(data[i]);  // 逐字节异或
+        wCrc ^= (unsigned char)(data[i]);  // 逐字节异或
 
         for (int j = 0; j < 8; j++) {
             if (wCrc & 0x0001) {  // 如果最低位是 1

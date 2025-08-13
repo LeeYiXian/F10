@@ -7,6 +7,10 @@
 #include "linearguiderailimpl.h"
 #include "filterWheelImpl.h"
 #include "stm2038bimpl.h"
+#include "axisclass.h"
+#include "Loggers.h"
+#include <atomic>
+#define AXISNUM 4
 class QmlCppBridge : public QObject {
     Q_OBJECT
 public:
@@ -15,6 +19,12 @@ signals:
     //zmq收到的数据传给qml展示
     void sendtoQml(const QVariant& data);
 
+	void sendtoSwitchMechanism(const QByteArray& data);
+	void sendtoFilterWheel(const QByteArray& data);
+	void sendtoWavePlate(const QByteArray& data);
+
+	void sendSerialData(const QByteArray& data);
+
 public slots:
 	void sendtoCpp(const QVariant& data);
 
@@ -22,8 +32,16 @@ public slots:
 
     void handlReceivedNetworkData(const QByteArray& data);
 
+	void onConnectStatus(bool status);
 public slots:
-    void onReceivedMsg(const QVariant& params);
+	void onReceivedMsg(const QVariant& params);
+public://支撑平台相关接口
+	void DmcInit();
+	void ConfigAxis(int i, AxisClass* pAxis);
+	void DmcDistory();
+	void QureyAxisStatus();
+	AxisClass* getAxisByTarget(AxisTarget target, const QString& targetStr);
+
 private:
     SerialPort* m_serialPort;
 	FilterWheelImpl* m_filterWheelImpl;
@@ -52,4 +70,26 @@ private:
 	unsigned char* doubleToChar(double fValue, unsigned char* kk);
 	double charToDouble(char* kk);
 	/*************************微振动台*********************************/
+
+	/*************************升降台 起*********************************/
+	DWORD    m_ConnectNum;//连接编号
+	DWORD    m_wCard;//卡号
+	QString  m_strIPAdress;//IP地址
+	std::vector<AxisClass> axisClasses;
+	bool    m_MCConnecState;//0 离线 1在线
+	bool    m_MCEnableState;//0 使能开 1使能关
+	AxisClass* pAxis[AXISNUM];
+	/*************************升降台 终*********************************/
+
+	QTimer* m_timer;
+
+	/*离线检测计数器*/
+	std::atomic<int> m_switchMissCount{ 0 };
+	std::atomic<int> m_filterMissCount{ 0 };
+	std::atomic<int> m_waveMissCount{ 0 };
+
+	std::atomic<bool> m_switchOnline{ false };
+	std::atomic<bool> m_filterOnline{ false };
+	std::atomic<bool> m_waveOnline{ false };
+	/*离线检测计数器*/
 };

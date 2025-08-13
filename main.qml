@@ -27,9 +27,84 @@ ApplicationWindow {
 
         objectName: "bridge"
 
-        onSendtoQml:function(params)
-        {
+        onSendtoQml: function(params) {
+            if (params.method === "switchmechanism.online")
+            {   
+                cardPageSwitch.isOnline = true
+            }
+            else if (params.method === "switchmechanism.offline")
+            {
+                cardPageSwitch.isOnline = false
+            }
+            else if (params.method === "filterwheel.online")
+            {
+                cardPageFilter.isOnline = true
+            }
+            else if (params.method === "filterwheel.offline")
+            {
+                cardPageFilter.isOnline = false
+            }
+            else if (params.method === "waveplate.online")
+            {
+                cardPageWaveplate.isOnline = true
+            }
+            else if (params.method === "waveplate.offline")
+            {
+                cardPageWaveplate.isOnline = false
+            }
+            else if (params.method === "dmc.online")
+            {
+                platformx.onlinestatus = true
+                platformy.onlinestatus = true
+                platformz.onlinestatus = true
+                platformh.onlinestatus = true
+            }
+            else if (params.method === "dmc.offline")
+            {
+                platformx.onlinestatus = false
+                platformy.onlinestatus = false
+                platformz.onlinestatus = false
+                platformh.onlinestatus = false
+            }
+            // 方法类型检查
+            else if(params.method === "axisStatusUpdate") {
+                console.log("Axis:", params.axis)
+                console.log("Position:", params.position)
+                console.log("Error code:", params.error)
             
+                if(params.axis === 0)
+                {
+                    platformx.axispos = params.position
+                    platformx.errorstatus = params.error
+                }
+                if(params.axis === 1)
+                {
+                    platformy.axispos = params.position
+                    platformy.errorstatus = params.error
+                }
+                if(params.axis === 2)
+                {
+                    platformz.axispos = params.position
+                    platformz.errorstatus = params.error
+                }
+                if(params.axis === 3)
+                {
+                    platformh.axispos = params.position
+                    platformh.errorstatus = params.error
+                }
+            }
+            else if (params.method === "shakingtable.voltage")
+            {
+                stxVoltage.text = params.x.toFixed(2)
+                styVoltage.text = params.y.toFixed(2)
+                stzVoltage.text = params.z.toFixed(2)
+            }
+            else if (params.method === "shakingtable.position")
+            {
+                stxPosition.text = params.x.toFixed(2)
+                styPosition.text = params.y.toFixed(2)
+                stzPosition.text = params.z.toFixed(2)
+            }
         }
     }
 
@@ -103,7 +178,7 @@ ApplicationWindow {
                 }
             }
         }
-
+        
         // 主内容区域
         StackLayout {
             id: stackLayout
@@ -131,7 +206,7 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         CardPage {
-                            id: cardPage
+                            id: cardPageSwitch
                             title: "切换机构"
     
                             Column {
@@ -140,7 +215,7 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 0
                                 padding: 10
-                                spacing: 30
+                                spacing: 100
 
                                 Row {
                                     spacing: 15
@@ -169,7 +244,7 @@ ApplicationWindow {
                                             bridge.sendtoCpp({"method":"switchmechanism.close"})
                                         }
                                     }
-            
+                                    /*
                                     FluButton {
                                         width: 150
                                         height: 50
@@ -181,11 +256,12 @@ ApplicationWindow {
                                         onClicked: {
                                             bridge.sendtoCpp({"method":"switchmechanism.findzero"})
                                         }
-                                    }  
+                                    }
+                                    */
                                 }
         
                                 RowLayout {
-                                    spacing: 15
+                                    spacing: 25
                                     Layout.alignment: Qt.AlignHCenter
                                     Label { 
                                         text: "电机位置" 
@@ -198,7 +274,7 @@ ApplicationWindow {
                                     }
             
                                     Rectangle {
-                                        Layout.preferredWidth: 200
+                                        Layout.preferredWidth: 120
                                         height: 40
                                         radius: 8
                                         border.color: "#4CAF50"
@@ -212,11 +288,7 @@ ApplicationWindow {
                                             color: "#2E7D32"
                                         }
                                     }
-                                }
-        
-                                RowLayout {
-                                    spacing: 15
-                                    Layout.alignment: Qt.AlignHCenter
+
                                     Label { 
                                         text: "电机状态" 
                                         color: "#404040" 
@@ -228,7 +300,7 @@ ApplicationWindow {
                                     }
 
                                     Rectangle {
-                                        Layout.preferredWidth: 200
+                                        Layout.preferredWidth: 120
                                         height: 40
                                         radius: 8
                                         border.color: "#2196F3"
@@ -247,7 +319,7 @@ ApplicationWindow {
                         }
 
                         CardPage {
-                            id: cardPage2
+                            id: cardPageFilter
                             title:"滤光轮"
     
                             anchors.left: cardPage.right
@@ -258,7 +330,7 @@ ApplicationWindow {
                                 anchors.topMargin: 55
                                 anchors.fill: parent
                                 padding: 25
-                                spacing: 25
+                                spacing: 100
                                 
                                 RowLayout {
                                     spacing: 15
@@ -272,22 +344,23 @@ ApplicationWindow {
                                     }
 
                                     FluComboBox {
-                                        Layout.preferredWidth: 200  // 使用Layout.preferredWidth代替width
+                                        Layout.preferredWidth: 250  // 使用Layout.preferredWidth代替width
                                         Layout.preferredHeight: 50  // 使用Layout.preferredHeight代替height
                                         font.pixelSize: 22
         
                                         editable: false
                                         model: ListModel {
                                             id: model
-                                            ListElement { text: "1档" }
-                                            ListElement { text: "2档" }
-                                            ListElement { text: "3档" }
-                                            ListElement { text: "4档" }
+                                            ListElement { text: "空挡" }
+                                            ListElement { text: "发1540.56 收1563.05" }
+                                            ListElement { text: "发1545.32 收1559.79" }
+                                            ListElement { text: "发1559.79 收1545.32" }
+                                            ListElement { text: "发1563.05 收1540.56" }
                                         }
                                     }
 
                                     FluButton {
-                                        Layout.preferredWidth: 150
+                                        Layout.preferredWidth: 100
                                         Layout.preferredHeight: 50
                                         
                                         font {
@@ -314,7 +387,7 @@ ApplicationWindow {
 
                                     // 优化后的挡位显示
                                     Rectangle {
-                                        Layout.preferredWidth: 200
+                                        Layout.preferredWidth: 120
                                         height: 40
                                         radius: 8
                                         border.color: "#3F51B5"
@@ -329,13 +402,9 @@ ApplicationWindow {
                                             color: "#1A237E"
                                         }
                                     }
-                                }
 
-                                RowLayout{
-                                    spacing: 15
-                                    Layout.alignment: Qt.AlignHCenter
                                     Label {
-                                        text: "运行状态" 
+                                        text: "电机状态" 
                                         color: "#404040" 
                                         font.pixelSize: 18 
                                         Layout.alignment: Qt.AlignVCenter
@@ -343,7 +412,7 @@ ApplicationWindow {
 
                                     // 优化后的状态显示
                                     Rectangle {
-                                        Layout.preferredWidth: 200
+                                        Layout.preferredWidth: 120
                                         height: 40
                                         radius: 8
                                         border.color: "#4CAF50"
@@ -364,6 +433,7 @@ ApplicationWindow {
 
                         //波片切换机构
                         CardPage {
+                            id: cardPageWaveplate
                             anchors.left: cardPage2.right
                             anchors.leftMargin: 45
                             title:"波片切换机构"
@@ -374,10 +444,10 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 0
                                 padding: 10
-                                spacing: 30
+                                spacing: 100
 
                                 Row{
-                                    spacing: 15
+                                    spacing: 100
                                     FluButton{
 
                                         width: 150
@@ -388,7 +458,7 @@ ApplicationWindow {
                                             pixelSize: 20             // 字体大小(像素)
                                             italic: false             // 是否斜体
                                         }
-                                        text:"开启"
+                                        text:"发射左旋"
                                         onClicked: {
                                             bridge.sendtoCpp({"method":"waveplate.open‌"})
                                         }
@@ -404,12 +474,12 @@ ApplicationWindow {
                                             pixelSize: 20             // 字体大小(像素)
                                             italic: false             // 是否斜体
                                         }
-                                        text:"关闭"
+                                        text:"发射右旋"
                                         onClicked: {
                                             bridge.sendtoCpp({"method":"waveplate.close"})
                                         }
                                     }
-                                    
+                                    /*
                                     FluButton{
 
                                         width: 150
@@ -424,11 +494,14 @@ ApplicationWindow {
                                         onClicked: {
                                             bridge.sendtoCpp({"method":"waveplate.findzero"})
                                         }
-                                    }  
+                                    }
+                                    */
                                 }
+
                                 RowLayout {
-                                    spacing: 15
+                                    spacing: 25
                                     Layout.alignment: Qt.AlignHCenter
+                                    
                                     Label { 
                                         text: "电机位置" 
                                         color: "#404040" 
@@ -440,7 +513,7 @@ ApplicationWindow {
                                     }
             
                                     Rectangle {
-                                        Layout.preferredWidth: 200
+                                        Layout.preferredWidth: 120
                                         height: 40
                                         radius: 8
                                         border.color: "#4CAF50"
@@ -454,11 +527,7 @@ ApplicationWindow {
                                             color: "#2E7D32"
                                         }
                                     }
-                                }
-        
-                                RowLayout {
-                                    spacing: 15
-                                    Layout.alignment: Qt.AlignHCenter
+
                                     Label { 
                                         text: "电机状态" 
                                         color: "#404040" 
@@ -470,7 +539,7 @@ ApplicationWindow {
                                     }
 
                                     Rectangle {
-                                        Layout.preferredWidth: 200
+                                        Layout.preferredWidth: 120
                                         height: 40
                                         radius: 8
                                         border.color: "#2196F3"
@@ -595,310 +664,32 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         
                         LSControlPanel{
+                            id: platformx
                             titleText: "支撑平台方位"
                             bridge: bridge
                             code: "platform.x"
                         }
 
                         LSControlPanel{
+                            id: platformy
                             titleText: "支撑平台俯仰"
                             bridge: bridge
                             code: "platform.y"
                         }
 
                         LSControlPanel{
+                            id: platformz
                             titleText: "支撑平台高低"
                             bridge: bridge
                             code: "platform.z"
                         }
 
                         LSControlPanel{
+                            id: platformh
                             titleText: "升降台"
                             bridge: bridge
                             code: "platform.hight"
                         }
-                        
-                        //支撑平台方位
-                        /*
-                        CardPage {
-                            anchors.left: cardPage2.right
-                            anchors.leftMargin: 45
-                            title:"支撑平台方位"
-                            Column {
-                                
-                                anchors.top: parent.top
-                                anchors.topMargin: 70
-                                anchors.left: parent.left
-                                anchors.leftMargin: 0
-                                padding: 10
-                                spacing: 30
-
-                                Row{
-                                    spacing: 15
-                                    FluButton{
-
-                                        width: 150
-                                        height: 50
-
-                                        font {
-                                            family:  "SimSun"  // 字体家族
-                                            pixelSize: 20             // 字体大小(像素)
-                                            italic: false             // 是否斜体
-                                        }
-                                        text:"使能"
-                                        onClicked: {
-
-                                        }
-                                    }
-
-                                    FluButton{
-
-                                        width: 150
-                                        height: 50
-
-                                        font {
-                                            family:  "SimSun"  // 字体家族
-                                            pixelSize: 20             // 字体大小(像素)
-                                            italic: false             // 是否斜体
-                                        }
-                                        text:"停止"
-                                        onClicked: {
-
-                                        }
-                                    }
-                                }
-
-                                Row{
-                                    spacing: 15
-                                    FluButton{
-
-                                        width: 150
-                                        height: 50
-
-                                        font {
-                                            family:  "SimSun"  // 字体家族
-                                            pixelSize: 20             // 字体大小(像素)
-                                            italic: false             // 是否斜体
-                                        }
-                                        text:"绝对定位"
-                                        onClicked: {
-
-                                        }
-                                    }
-
-                                    FluButton{
-
-                                        width: 150
-                                        height: 50
-
-                                        font {
-                                            family:  "SimSun"  // 字体家族
-                                            pixelSize: 20             // 字体大小(像素)
-                                            italic: false             // 是否斜体
-                                        }
-                                        text:"前进"
-                                        onClicked: {
-
-                                        }
-                                    }
-
-                                    FluButton{
-
-                                        width: 150
-                                        height: 50
-
-                                        font {
-                                            family:  "SimSun"  // 字体家族
-                                            pixelSize: 20             // 字体大小(像素)
-                                            italic: false             // 是否斜体
-                                        }
-                                        text:"后退"
-                                        onClicked: {
-
-                                        }
-                                    }
-                                }
-                                
-                                RowLayout{
-                                    spacing: 15
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Label { 
-                                        text: "位置" 
-                                        color: "#404040" 
-                                        font.pixelSize: 18 
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-                                    
-                                    FluMultilineTextBox{
-                                        Layout.preferredWidth:150
-                                        disabled: false
-                                    }
- 
-                                    Label { 
-                                        text: "速度" 
-                                        color: "#404040" 
-                                        font.pixelSize: 18 
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-
-                                    FluMultilineTextBox{
-                                        Layout.preferredWidth:150
-                                        disabled: false
-                                    }
-                                }
-                            }
-                        }
-                        */
-                        
-                        /*
-                        //大升降台
-                        CardPage {
-                            title:"升降台"
-                            Column {
-
-                                spacing: 15
-                                anchors.top: parent.top
-                                anchors.topMargin: 60
-                                anchors.left: parent.left
-                                anchors.leftMargin: 20
-
-                                FluTextBox{
-                                    placeholderText: qsTr("输入高度")
-                                }
-                                
-                                FluButton{
-                                    text:"下发"
-                                    onClicked: {
-                                        
-                                    }
-                                }
-                            }
-                        }
-
-                        //双轴转台控制
-                        CardPage {
-                            title:"双轴转台"
-                            ColumnLayout {
-                                anchors.top: parent.top
-                                anchors.topMargin: 100
-                                anchors.left: parent.left
-                                anchors.leftMargin: 75
-                                spacing: 15
-                                Layout.alignment: Qt.AlignCenter
-    
-                                // 第一行：上按钮
-                                Button {
-                                    text: "↑"
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.preferredWidth: 80
-                                    Layout.preferredHeight: 40
-
-                                    background: Rectangle {
-                                        color: parent.down ? "#3a3a3a" : 
-                                              parent.hovered ? "#535353" : "#424242"
-                                        radius: 6
-                                        border.width: parent.hovered ? 2 : 1
-                                        border.color: parent.hovered ? "#6b6b6b" : "#555555"
-                                    }
-                                    contentItem: Text {
-                                        text: parent.text
-                                        color: "#f0f0f0"
-                                        font {
-                                            family: "Microsoft YaHei"
-                                            pixelSize: 16
-                                            bold: true
-                                        }
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-                                }
-
-                                // 第二行：左、下、右按钮
-                                RowLayout {
-                                    spacing: 15
-                                    Layout.alignment: Qt.AlignHCenter
-        
-                                    Button {
-                                        text: "←"
-                                        Layout.preferredWidth: 80
-                                        Layout.preferredHeight: 40
-
-
-                                        background: Rectangle {
-                                            color: parent.down ? "#3a3a3a" : 
-                                                  parent.hovered ? "#535353" : "#424242"
-                                            radius: 6
-                                            border.width: parent.hovered ? 2 : 1
-                                            border.color: parent.hovered ? "#6b6b6b" : "#555555"
-                                        }
-                                        contentItem: Text {
-                                            text: parent.text
-                                            color: "#f0f0f0"
-                                            font {
-                                                family: "Microsoft YaHei"
-                                                pixelSize: 16
-                                                bold: true
-                                            }
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                        }
-                                    }
-
-                                    Button {
-                                        text: "↓"
-                                        Layout.preferredWidth: 80
-                                        Layout.preferredHeight: 40
-
-
-                                        background: Rectangle {
-                                            color: parent.down ? "#3a3a3a" : 
-                                                  parent.hovered ? "#535353" : "#424242"
-                                            radius: 6
-                                            border.width: parent.hovered ? 2 : 1
-                                            border.color: parent.hovered ? "#6b6b6b" : "#555555"
-                                        }
-                                        contentItem: Text {
-                                            text: parent.text
-                                            color: "#f0f0f0"
-                                            font {
-                                                family: "Microsoft YaHei"
-                                                pixelSize: 16
-                                                bold: true
-                                            }
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                        }
-                                    }
-
-                                    Button {
-                                        text: "→"
-                                        Layout.preferredWidth: 80
-                                        Layout.preferredHeight: 40
-
-
-                                        background: Rectangle {
-                                            color: parent.down ? "#3a3a3a" : 
-                                                  parent.hovered ? "#535353" : "#424242"
-                                            radius: 6
-                                            border.width: parent.hovered ? 2 : 1
-                                            border.color: parent.hovered ? "#6b6b6b" : "#555555"
-                                        }
-                                        contentItem: Text {
-                                            text: parent.text
-                                            color: "#f0f0f0"
-                                            font {
-                                                family: "Microsoft YaHei"
-                                                pixelSize: 16
-                                                bold: true
-                                            }
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        */
                     }
                 }
             }
@@ -924,7 +715,7 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         //震动设置 x
                         CardPage {
-                            title:"微振动台-x轴"
+                            title:"微振动台-方位"
                             Column {
                                 spacing: 15
                                 anchors.top: parent.top
@@ -936,7 +727,7 @@ ApplicationWindow {
                                     Layout.alignment: Qt.AlignHCenter
 
                                     Label { 
-                                        text: "电机位置" 
+                                        text: "波形" 
                                         color: "#404040" 
                                         font {
                                             pixelSize: 18
@@ -1057,7 +848,7 @@ ApplicationWindow {
                                     spacing: 15
                                     Layout.alignment: Qt.AlignHCenter
                                     Label {
-                                        text: "当前挡位" 
+                                        text: "电压" 
                                         color: "#404040" 
                                         font.pixelSize: 18 
                                         Layout.alignment: Qt.AlignVCenter
@@ -1073,8 +864,8 @@ ApplicationWindow {
                                         color: "#E8EAF6"
                 
                                         Text {
+                                            id: stxVoltage
                                             anchors.centerIn: parent
-                                            text: "1档"
                                             font.pixelSize: 16
                                             font.bold: true
                                             color: "#1A237E"
@@ -1082,7 +873,7 @@ ApplicationWindow {
                                     }
 
                                     Label {
-                                        text: "运行状态" 
+                                        text: "位移" 
                                         color: "#404040" 
                                         font.pixelSize: 18 
                                         Layout.alignment: Qt.AlignVCenter
@@ -1098,8 +889,8 @@ ApplicationWindow {
                                         color: "#E8F5E9"
                 
                                         Text {
+                                            id: stxPosition
                                             anchors.centerIn: parent
-                                            text: "就绪"
                                             font.pixelSize: 16
                                             font.bold: true
                                             color: "#2E7D32"
@@ -1111,7 +902,7 @@ ApplicationWindow {
                         
                         //震动设置 y
                         CardPage {
-                            title:"微振动台-y轴"
+                            title:"微振动台-俯仰"
                             Column {
                                 spacing: 15
                                 anchors.top: parent.top
@@ -1123,7 +914,7 @@ ApplicationWindow {
                                     Layout.alignment: Qt.AlignHCenter
 
                                     Label { 
-                                        text: "电机位置" 
+                                        text: "波形" 
                                         color: "#404040" 
                                         font {
                                             pixelSize: 18
@@ -1246,7 +1037,7 @@ ApplicationWindow {
                                     spacing: 15
                                     Layout.alignment: Qt.AlignHCenter
                                     Label {
-                                        text: "当前挡位" 
+                                        text: "电压" 
                                         color: "#404040" 
                                         font.pixelSize: 18 
                                         Layout.alignment: Qt.AlignVCenter
@@ -1262,8 +1053,8 @@ ApplicationWindow {
                                         color: "#E8EAF6"
                 
                                         Text {
+                                            id: styVoltage
                                             anchors.centerIn: parent
-                                            text: "1档"
                                             font.pixelSize: 16
                                             font.bold: true
                                             color: "#1A237E"
@@ -1271,7 +1062,7 @@ ApplicationWindow {
                                     }
 
                                     Label {
-                                        text: "运行状态" 
+                                        text: "位移" 
                                         color: "#404040" 
                                         font.pixelSize: 18 
                                         Layout.alignment: Qt.AlignVCenter
@@ -1287,8 +1078,195 @@ ApplicationWindow {
                                         color: "#E8F5E9"
                 
                                         Text {
+                                            id: styPosition
                                             anchors.centerIn: parent
-                                            text: "就绪"
+                                            font.pixelSize: 16
+                                            font.bold: true
+                                            color: "#2E7D32"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                         //震动设置
+                        CardPage {
+                            title:"微振动台-横滚"
+                            Column {
+                                spacing: 15
+                                anchors.top: parent.top
+                                anchors.topMargin: 60
+                                anchors.left: parent.left
+                                anchors.leftMargin: 20
+                                RowLayout {
+                                    spacing: 15
+                                    Layout.alignment: Qt.AlignHCenter
+
+                                    Label { 
+                                        text: "波形" 
+                                        color: "#404040" 
+                                        font {
+                                            pixelSize: 18
+                                            bold: true
+                                        }
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    FluComboBox{
+                                        id: waveCombox3
+                                        Layout.preferredWidth: 180  // 使用Layout.preferredWidth代替width
+                                        Layout.preferredHeight: 50  // 使用Layout.preferredHeight代替height
+
+                                        font.pixelSize: 22
+                                    
+                                        editable: false
+                                        model: ListModel {
+                                            id: model3
+                                            ListElement { text: "波形1" }
+                                            ListElement { text: "波形2" }
+                                            ListElement { text: "波形3" }
+                                            ListElement { text: "波形4" }
+                                        }
+                                    }
+                                    
+                                    Label { 
+                                        text: "震动幅值" 
+                                        color: "#404040" 
+                                        font {
+                                            pixelSize: 18
+                                            bold: true
+                                        }
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    FluTextBox{
+                                        id: peakText3
+                                        Layout.preferredWidth: 100  // 使用Layout.preferredWidth代替width
+                                        Layout.preferredHeight: 50  // 使用Layout.preferredHeight代替height
+                                    }
+                                }
+                                
+                                RowLayout {
+                                    spacing: 15
+                                    Layout.alignment: Qt.AlignHCenter
+
+                                    Label { 
+                                        text: "频率" 
+                                        color: "#404040" 
+                                        font {
+                                            pixelSize: 18
+                                            bold: true
+                                        }
+                                        Layout.alignment: Qt.AlignVCenter
+                                    } 
+
+                                    FluTextBox{
+                                        id: freqText3
+                                        Layout.preferredWidth: 150  // 使用Layout.preferredWidth代替width
+                                        Layout.preferredHeight: 40  // 使用Layout.preferredHeight代替height
+                                    }
+
+                                    Label { 
+                                        text: "偏置" 
+                                        color: "#404040" 
+                                        font {
+                                            pixelSize: 18
+                                            bold: true
+                                        }
+                                        Layout.alignment: Qt.AlignVCenter
+                                    } 
+
+                                    FluTextBox{
+                                        id: offsetText3
+                                        Layout.preferredWidth: 150  // 使用Layout.preferredWidth代替width
+                                        Layout.preferredHeight: 40  // 使用Layout.preferredHeight代替height
+                                    }
+                                }
+                                
+                                Row{
+                                    x: (parent.width - width) / 2
+                                    spacing: 15
+                                    FluButton{
+
+                                        width: 150
+                                        height: 50
+
+                                        font {
+                                            family:  "SimSun"  // 字体家族
+                                            pixelSize: 20             // 字体大小(像素)
+                                            italic: false             // 是否斜体
+                                        }
+                                        text:"开始"
+                                        onClicked: {
+                                            //下发震动指令
+                                            bridge.sendtoCpp({"method":"‌shakingtable.open","chl":"z","wave":waveCombox3.currentIndex,"peak":peakText3.text,"freq":freqText3.text,"offset":offsetText3.text})
+                                        }
+                                    }
+
+                                    FluButton{
+
+                                        width: 150
+                                        height: 50
+
+                                        font {
+                                            family:  "SimSun"  // 字体家族
+                                            pixelSize: 20             // 字体大小(像素)
+                                            italic: false             // 是否斜体
+                                        }
+                                        text:"停止"
+                                        onClicked: {
+                                            bridge.sendtoCpp({"method":"‌shakingtable.close","chl":"z"})
+                                        }
+                                    }
+                                }
+                                
+                                RowLayout{
+                                    spacing: 15
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Label {
+                                        text: "电压" 
+                                        color: "#404040" 
+                                        font.pixelSize: 18 
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    // 优化后的挡位显示
+                                    Rectangle {
+                                        Layout.preferredWidth: 125
+                                        height: 40
+                                        radius: 8
+                                        border.color: "#3F51B5"
+                                        border.width: 2
+                                        color: "#E8EAF6"
+                
+                                        Text {
+                                            id: stzVoltage
+                                            anchors.centerIn: parent
+                                            font.pixelSize: 16
+                                            font.bold: true
+                                            color: "#1A237E"
+                                        }
+                                    }
+
+                                    Label {
+                                        text: "位移" 
+                                        color: "#404040" 
+                                        font.pixelSize: 18 
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    // 优化后的状态显示
+                                    Rectangle {
+                                        Layout.preferredWidth: 125
+                                        height: 40
+                                        radius: 8
+                                        border.color: "#4CAF50"
+                                        border.width: 2
+                                        color: "#E8F5E9"
+                
+                                        Text {
+                                            id: stzPosition
+                                            anchors.centerIn: parent
                                             font.pixelSize: 16
                                             font.bold: true
                                             color: "#2E7D32"

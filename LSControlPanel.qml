@@ -8,24 +8,28 @@ CardPage {
     property var titleText: ""
     property var bridge
     property var code: ""
+    property var axispos: ""
+    property var errorstatus: ""
+    property bool onlinestatus : false
     anchors.leftMargin: 45
+    isOnline: onlinestatus
     title: titleText
     Column {
         anchors.top: parent.top
         anchors.topMargin: 50
         anchors.left: parent.left
         anchors.leftMargin: 0
-        padding: 10
-        spacing: 15
+        padding: 20
+        spacing: 20
         Row{
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 15
             FluButton{
-                width: 150
-                height: 50
+                width: 135
+                height: 45
 
                 font {
-                    family:  "SimSun"  // 字体家族
+                    family:  "SimSun"         // 字体家族
                     pixelSize: 20             // 字体大小(像素)
                     italic: false             // 是否斜体
                 }
@@ -36,12 +40,27 @@ CardPage {
             }
 
             FluButton{
-
-                width: 150
-                height: 50
+                width: 135
+                height: 45
 
                 font {
-                    family:  "SimSun"  // 字体家族
+                    family:  "SimSun"         // 字体家族
+                    pixelSize: 20             // 字体大小(像素)
+                    italic: false             // 是否斜体
+                }
+                text:"去使能"
+                onClicked: {
+                    bridge.sendtoCpp({"method": "supportplatform.unable","target":code});
+                }
+            }
+
+            FluButton{
+
+                width: 135
+                height: 45
+
+                font {
+                    family:  "SimSun"         // 字体家族
                     pixelSize: 20             // 字体大小(像素)
                     italic: false             // 是否斜体
                 }
@@ -59,40 +78,59 @@ CardPage {
             Label { 
                 text: "位置" 
                 color: "#404040" 
-                font.pixelSize: 18 
+                font.pixelSize: 20 
                 Layout.alignment: Qt.AlignVCenter
             }
                                     
-            FluMultilineTextBox{
+            FluTextBox{
                 id: positionInput
-                Layout.preferredWidth:150
+                Layout.preferredWidth: 150
                 disabled: false
+                font.family: "Times New Roman"
+                inputMethodHints: Qt.ImhFormattedNumbersOnly
+                font.pixelSize: 20 
+                validator: DoubleValidator {
+                    bottom: 0.0
+                    top: 10000.0
+                    decimals: 2
+                    notation: DoubleValidator.StandardNotation
+                }
             }
  
-            Label { 
+            Label {
                 text: "速度" 
                 color: "#404040" 
-                font.pixelSize: 18 
+                font.pixelSize: 20 
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            FluMultilineTextBox{
+            FluTextBox{
                 id: speedInput
                 Layout.preferredWidth:150
                 disabled: false
+                font.family: "Times New Roman"
+                inputMethodHints: Qt.ImhFormattedNumbersOnly
+                font.pixelSize: 20 
+                validator: DoubleValidator {
+                    bottom: 0.0
+                    top: 10000.0
+                    decimals: 2
+                    notation: DoubleValidator.StandardNotation
+                }
             }
         }
 
         Row{
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 15
             
             FluButton{
 
-                width: 150
-                height: 50
+                width: 135
+                height: 45
 
                 font {
-                    family:  "SimSun"  // 字体家族
+                    family:  "SimSun"         // 字体家族
                     pixelSize: 20             // 字体大小(像素)
                     italic: false             // 是否斜体
                 }
@@ -104,11 +142,11 @@ CardPage {
 
             FluButton{
 
-                width: 150
-                height: 50
+                width: 135
+                height: 45
 
                 font {
-                    family:  "SimSun"  // 字体家族
+                    family:  "SimSun"         // 字体家族
                     pixelSize: 20             // 字体大小(像素)
                     italic: false             // 是否斜体
                 }
@@ -120,11 +158,11 @@ CardPage {
 
             FluButton{
 
-                width: 150
-                height: 50
+                width: 135
+                height: 45
 
                 font {
-                    family:  "SimSun"  // 字体家族
+                    family:  "SimSun"         // 字体家族
                     pixelSize: 20             // 字体大小(像素)
                     italic: false             // 是否斜体
                 }
@@ -139,7 +177,7 @@ CardPage {
             spacing: 15
             Layout.alignment: Qt.AlignHCenter
             Label {
-                text: "当前位置" 
+                text: "轴位置" 
                 color: "#404040" 
                 font.pixelSize: 18 
                 Layout.alignment: Qt.AlignVCenter
@@ -156,7 +194,7 @@ CardPage {
                 
                 Text {
                     anchors.centerIn: parent
-                    text: "1档"
+                    text: axispos
                     font.pixelSize: 16
                     font.bold: true
                     color: "#1A237E"
@@ -164,7 +202,7 @@ CardPage {
             }
 
             Label {
-                text: "运行状态" 
+                text: "错误状态" 
                 color: "#404040" 
                 font.pixelSize: 18 
                 Layout.alignment: Qt.AlignVCenter
@@ -181,7 +219,7 @@ CardPage {
                 
                 Text {
                     anchors.centerIn: parent
-                    text: "就绪"
+                    text: errorstatus
                     font.pixelSize: 16
                     font.bold: true
                     color: "#2E7D32"

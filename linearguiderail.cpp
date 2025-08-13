@@ -1,4 +1,5 @@
 #include "linearguiderailimpl.h"
+#include "Loggers.h"
 #include <stdexcept>
 #include <string>
 
@@ -9,7 +10,9 @@ int LinearGuideRailImpl::readMotorPosition(int addr, char* outBuffer)
     outBuffer[1] = 0x03;
 
     int nRegister = 1000;
-    memcpy(outBuffer + 2, &nRegister, 2);
+    //memcpy(outBuffer + 2, &nRegister, 2);
+    outBuffer[2] = (nRegister >> 8) & 0xFF;
+    outBuffer[3] = nRegister & 0xFF;
 
     outBuffer[4] = 0x00;
     outBuffer[5] = 0x02;
@@ -94,15 +97,24 @@ int LinearGuideRailImpl::moveByStep(int addr, int step, char* outBuffer)
     if (step < 0)
     {
         nRegester = 2006;
+        step = std::abs(step);
     }
-    memcpy(outBuffer + 2, &nRegester, 2);
+
+    outBuffer[2] = (nRegester >> 8) & 0xFF;
+    outBuffer[3] = nRegester & 0xFF;
+    //memcpy(outBuffer + 2, &nRegester, 2);
 
     outBuffer[4] = 0x00;
     outBuffer[5] = 0x02;
 
     outBuffer[6] = 0x04;
 
-    memcpy(outBuffer + 7, &step, 4);
+    //memcpy(outBuffer + 7, &step, 4);
+
+    outBuffer[7] = (step >> 24) & 0xFF;
+    outBuffer[8] = (step >> 16) & 0xFF;
+    outBuffer[9] = (step >> 8) & 0xFF;
+    outBuffer[10] = step & 0xFF;
 
     char clc16[2];
     modBusCRC(outBuffer, 11, clc16);
@@ -224,25 +236,28 @@ bool LinearGuideRailImpl::dataParse(char* buffer, int len, sOutData* outData, in
 
 void LinearGuideRailImpl::modBusCRC(const char* data, int cnt, char* outData)
 {
-    uint16_t wCrc = 0xFFFF;  // CRC 初始值
+    unsigned short CRC = 0xffff;//（1）CRC寄存器初值0xffff
 
-    for (int i = 0; i < cnt; i++) {
-        wCrc ^= (uint16_t)(data[i]);  // 逐字节异或
-
-        for (int j = 0; j < 8; j++) {
-            if (wCrc & 0x0001) {  // 如果最低位是 1
-                wCrc >>= 1;
-                wCrc ^= 0xA001;   // 异或多项式 0xA001 (Modbus)
+    int dataSize = cnt;
+    for (int i = 0; i < dataSize; i++)//（5）重复步骤2~4
+    {
+        LX_LOG_INFO("data [%d] [%02x] cnt[%d]",i, data[i], cnt);
+        CRC = CRC ^ (unsigned char)data[i];//(2)数据与CRC异或
+        for (int j = 0; j < 8; j++)//（4）重复8次步骤3
+        {
+            //(3)检测低位是否为1。方法：与1相与，低位为1则结果为1，低位为0则结果为0
+            if (CRC & 1)//如果低位为1，则先右移一位，再与A001H相异或
+            {
+                CRC >>= 1;
+                CRC ^= 0xA001;
             }
-            else {
-                wCrc >>= 1;
-            }
+            else//低位为0，则右移一位
+                CRC >>= 1;
         }
     }
-
-    // 返回 CRC 校验码（低位在前）
-    outData[0] = static_cast<char>(wCrc & 0xFF);
-    outData[1] = static_cast<char>((wCrc >> 8) & 0xFF);
+    LX_LOG_INFO("data  [%04x] ", CRC);
+    // 转换为4位十六进制字符串并存储到char数组
+    memcpy(outData, &CRC, 2);
     return;
 }
 

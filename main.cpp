@@ -9,22 +9,10 @@ int main(int argc, char *argv[])
 #endif
 
     QGuiApplication app(argc, argv);
-    qmlRegisterType<QmlCppBridge>("com.company.bridge", 1, 0, "QmlCppBridge");
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("./main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-
-	QObject* rootObject = engine.rootObjects().first();
-	QmlCppBridge* bridge = rootObject->findChild<QmlCppBridge*>("bridge");
-
-	if (bridge) {
-		QThread* workerThread = new QThread;
-		bridge->moveToThread(workerThread);
-
-		QObject::connect(workerThread, &QThread::finished, bridge, &QObject::deleteLater);
-		workerThread->start();
-	}
-
+	qmlRegisterType<QmlCppBridge>("com.company.bridge", 1, 0, "QmlCppBridge");
+	QQmlApplicationEngine engine;
+	engine.load(QUrl(QStringLiteral("./main.qml")));
+	if (engine.rootObjects().isEmpty())
+		return -1;
     return app.exec();
 }

@@ -64,7 +64,6 @@ void SerialPort::connectDevice(const QString& portName, int baudRate)
         return;
     }
 
-    QMutexLocker locker(&m_mutex);  // 线程安全锁
     if (m_serial->isOpen()) {
         emit errorOccurred(tr("Port already opened"));
         return;

@@ -30,7 +30,7 @@ public:
     //设置控制模式
     int setContorMode(int addr, char* outBuffer);
 
-    //设置工作模式
+    //设置工作模式x`
     int setWorkMode(int addr, workModes mode, char* outBuffer);
 
     //设置目标位置
@@ -44,6 +44,12 @@ public:
 
     //设置减速度
     int setDeceleration(int addr, int deceleration, char* outBuffer);
+
+    //使电机准备
+    int motorReady(int addr, char* outBuffer);
+
+    //电机失能
+    int motorDisablement(int addr, char* outBuffer);
 
     //使电机使能
     int motorEnablement(int addr, char* outBuffer);
