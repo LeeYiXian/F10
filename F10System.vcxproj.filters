@@ -99,6 +99,12 @@
     <QtMoc Include="NetworkManager.h">
       <Filter>Source Files</Filter>
     </QtMoc>
+    <QtMoc Include="ServoUdp.h">
+      <Filter>Source Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ServoUdp.cpp">
+      <Filter>Source Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="protobuf\pb\ttb_control.pb.h">

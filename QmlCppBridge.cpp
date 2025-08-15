@@ -34,17 +34,25 @@ QmlCppBridge::QmlCppBridge(QObject * parent)
 	m_filterWheelImpl = new FilterWheelImpl();
 	m_stm2038BImpl = new Stm2038bImpl();
 
-	connect(m_switchMechanismNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
-	connect(m_filterWheelNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
-	connect(m_wavePlateNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handlReceivedNetworkData);
+	connect(m_switchMechanismNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handleReceivedNetworkData);
+	connect(m_filterWheelNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handleReceivedNetworkData);
+	connect(m_wavePlateNetMgr, &NetworkManager::dataReceived, this, &QmlCppBridge::handleReceivedNetworkData);
 
 	// 连接串口接收信号，处理设备返回数据
     m_serialPort = new SerialPort();
-	
 	connect(m_serialPort, &SerialPort::connectionChanged, this, &QmlCppBridge::onConnectStatus);
 	connect(m_serialPort, &SerialPort::dataReceived, this, &QmlCppBridge::handleReceivedSerialData);
 	connect(this, &QmlCppBridge::sendSerialData, m_serialPort, &SerialPort::sendData);
 	m_serialPort->connectDevice("COM5", 9600);
+
+	//伺服类
+	m_servoUdp = new ServoUdp(LOCAL_PORT,QHostAddress(SERVO_IP),SERVO_PORT,this);
+	connect(m_servoUdp, &ServoUdp::received, this, &QmlCppBridge::handleReceivedServoData);
+
+	// 心跳定时器初始化，但不启动
+	m_heartbeatTimer.setInterval(1000 / 7); // 7Hz -> ~142ms
+	connect(&m_heartbeatTimer, &QTimer::timeout, this, &QmlCppBridge::sendHeartbeat);
+	m_heartbeatTimer.start();
 	//运动初始化
 	for (int i = 0; i < AXISNUM; i++)
 	{
@@ -106,19 +114,108 @@ QmlCppBridge::QmlCppBridge(QObject * parent)
 				}
 			}
 
+			//切换机构电机状态查询
+            memset(outBuffer, 0, MAX_SEND_BUFFER_SIZE);
+            sendLen = m_linearGuiderailImpl->getMotorStatus(1, outBuffer);
+            emit sendtoWavePlate(QByteArray(outBuffer, sendLen));
+            if (--m_waveMissCount < 0)
+            {
+                m_waveMissCount = 0; // 避免负数
+                if (m_waveOnline)
+                {
+                    m_waveOnline = false;
+                    QVariantMap map;
+                    map["method"] = "waveplate.offline";
+                    emit sendtoQml(map);
+                }
+            }
+
+            //滤光轮电机状态查询
+            memset(outBuffer, 0, MAX_SEND_BUFFER_SIZE);
+            sendLen = m_filterWheelImpl->getMotorStatus(1, outBuffer);
+            emit sendtoWavePlate(QByteArray(outBuffer, sendLen));
+            if (--m_waveMissCount < 0)
+            {
+                m_waveMissCount = 0; // 避免负数
+                if (m_waveOnline)
+                {
+                    m_waveOnline = false;
+                    QVariantMap map;
+                    map["method"] = "waveplate.offline";
+                    emit sendtoQml(map);
+                }
+            }
+
+            //波片电机状态查询
+            memset(outBuffer, 0, MAX_SEND_BUFFER_SIZE);
+            sendLen = m_stm2038BImpl->getMotorStatus(1, outBuffer);
+            emit sendtoWavePlate(QByteArray(outBuffer, sendLen));
+            if (--m_waveMissCount < 0)
+            {
+                m_waveMissCount = 0; // 避免负数
+                if (m_waveOnline)
+                {
+                    m_waveOnline = false;
+                    QVariantMap map;
+                    map["method"] = "waveplate.offline";
+                    emit sendtoQml(map);
+                }
+            }
 
 			{
-				unsigned char packet[6];
+				unsigned char packet[7];
 				packet[0] = 0xAA;
 				packet[1] = 0x01;
 				packet[2] = 0x07;                     // 数据长度
-				packet[3] = 0x33;                     // 命令码
+				packet[3] = 0x05;                     // 命令码
 				packet[4] = 0x00;                     // 
-				packet[5] = calcBit(packet, 5);
+				packet[5] = 0x00;
+				packet[6] = calcBit(packet, 6);
 
 				// 通过SerialPort发送
-				emit sendSerialData(QByteArray((const char*)packet, 6));
+				emit sendSerialData(QByteArray((const char*)packet, 7));
+			}
 
+			{
+				unsigned char packet[7];
+				packet[0] = 0xAA;
+				packet[1] = 0x01;
+				packet[2] = 0x07;                     // 数据长度
+				packet[3] = 0x05;                     // 命令码
+				packet[4] = 0x00;                     // 
+				packet[5] = 0x01;
+				packet[6] = calcBit(packet, 6);
+
+				// 通过SerialPort发送
+				emit sendSerialData(QByteArray((const char*)packet, 7));
+			}
+
+			{
+				unsigned char packet[7];
+				packet[0] = 0xAA;
+				packet[1] = 0x01;
+				packet[2] = 0x07;                     // 数据长度
+				packet[3] = 0x06;                     // 命令码
+				packet[4] = 0x00;                     // 
+				packet[5] = 0x00;
+				packet[6] = calcBit(packet, 6);
+
+				// 通过SerialPort发送
+				emit sendSerialData(QByteArray((const char*)packet, 7));
+			}
+
+			{
+				unsigned char packet[7];
+				packet[0] = 0xAA;
+				packet[1] = 0x01;
+				packet[2] = 0x07;                     // 数据长度
+				packet[3] = 0x06;                     // 命令码
+				packet[4] = 0x00;                     // 
+				packet[5] = 0x01;
+				packet[6] = calcBit(packet, 6);
+
+				// 通过SerialPort发送
+				emit sendSerialData(QByteArray((const char*)packet, 7));
 			}
 
 			QThread::msleep(500);
@@ -153,12 +250,12 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 
 	if (method == "switchmechanism.open") {
 		sendToDevice(m_switchMechanismNetMgr, [&] {
-			return m_linearGuiderailImpl->moveByStep(1, 90000, outBuffer);
+			return m_linearGuiderailImpl->moveByStep(1, 900000, outBuffer);
 		}, & QmlCppBridge::sendtoSwitchMechanism);
 	}
 	else if (method == "switchmechanism.close") {
 		sendToDevice(m_switchMechanismNetMgr, [&] {
-			return m_linearGuiderailImpl->moveByStep(1, -90000, outBuffer);
+			return m_linearGuiderailImpl->moveByStep(1, -900000, outBuffer);
 		}, & QmlCppBridge::sendtoSwitchMechanism);
 	}
 	else if (method == "switchmechanism.findzero") {
@@ -176,22 +273,27 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 
 		QThread* thread = new QThread();
 		QObject::connect(thread, &QThread::started, [=]{
-			QByteArray outBuffer(MAX_SEND_BUFFER_SIZE, 0);
+
+			char outBuffer[MAX_SEND_BUFFER_SIZE] = { 0 };
 			if (!gearMap.contains(index)) {
 				qDebug() << "Invalid filter wheel index";
 				thread->quit();
 				return;
 			}
 
-			sendToDevice(m_filterWheelNetMgr, [&] {
-				return m_filterWheelImpl->motorZeroing(1, outBuffer.data());
-			}, &QmlCppBridge::sendtoFilterWheel);
+			int sendLen = m_filterWheelImpl->motorZeroing(1, outBuffer);
+			emit sendtoFilterWheel(QByteArray(outBuffer, sendLen));
 
 			QThread::msleep(8000);
+            memset(outBuffer, 0, sizeof(outBuffer));
+            sendLen = m_filterWheelImpl->setZeroing(1, outBuffer);
+            emit sendtoFilterWheel(QByteArray(outBuffer, sendLen));
 
-			sendToDevice(m_filterWheelNetMgr, [&] {
-				return m_filterWheelImpl->moveByStep(1, gearMap[index], outBuffer.data());
-			}, &QmlCppBridge::sendtoFilterWheel);
+			QThread::msleep(100);
+
+			memset(outBuffer, 0, sizeof(outBuffer));
+			sendLen = m_filterWheelImpl->moveByStep(1, gearMap[index], outBuffer);
+			emit sendtoFilterWheel(QByteArray(outBuffer, sendLen));
 
 			QThread::msleep(6000);
 			thread->quit();
@@ -409,6 +511,78 @@ void QmlCppBridge::sendtoCpp(const QVariant& data)
 		m_serialPort->sendData(QByteArray((const char*)packet, 7));
 		qDebug() << "Sent stop packet (6 bytes)";
 	}
+
+
+	//伺服下发前置数据
+	else if (method == "servo.setmode")
+	{
+		// mode 是一个字节，比如 0x00, 0x10, 0x20, 0x30
+		int mode = map["value"].toInt();
+
+		// 组protobuf包
+		TtbSet msg;
+		msg.set_operation(TtbOperation::TTB_MODE);
+		msg.set_set_mode(TtbMode(mode));
+		msg.set_hb(m_hbCount++);
+		//UDP发送
+		m_servoUdp->send(serializeMessage(msg));
+	}
+	else if (method == "servo.setvel")
+	{
+		TtbSet msg;
+		msg.set_operation(TtbOperation::TTB_SET_VEL);
+
+		QVariant valueVar = map["value"];
+		QVariantMap velMap = valueVar.toMap();
+		float vx = velMap.value("x").toFloat();
+		float vy = velMap.value("y").toFloat();
+
+		// 填充 set_vel
+		TtbSetVel* vel = msg.mutable_set_vel();
+		vel->set_vel_x(vx);
+		vel->set_vel_y(vy);
+		msg.set_hb(m_hbCount++);
+		// UDP发送
+		m_servoUdp->send(serializeMessage(msg));
+	}
+	else if (method == "servo.setposx")
+	{
+		TtbSet msg;
+		msg.set_operation(TtbOperation::TTB_SET_POS_X);
+
+		double pos = map["value"].toDouble();
+
+		// 填充 set_pos_x
+		TtbSetPos* posx = msg.mutable_set_pos_x();
+		posx->set_pos(pos);
+		posx->set_pos_max_vel(30);
+		msg.set_hb(m_hbCount++);
+		// UDP发送
+		m_servoUdp->send(serializeMessage(msg));
+	}
+	else if (method == "servo.setposy")
+	{
+		TtbSet msg;
+		msg.set_operation(TtbOperation::TTB_SET_POS_Y);
+
+		double pos = map["value"].toDouble();
+
+		// 填充 set_pos_x
+		TtbSetPos* posx = msg.mutable_set_pos_y();
+		posx->set_pos(pos);
+		posx->set_pos_max_vel(30);
+		msg.set_hb(m_hbCount++);
+		// UDP发送
+		m_servoUdp->send(serializeMessage(msg));
+	}
+}
+
+void QmlCppBridge::sendHeartbeat() {
+	TtbSet msg;
+	msg.set_operation(TtbOperation::TTB_NO_CMD);
+	msg.set_hb(m_hbCount++);
+	// UDP发送
+	m_servoUdp->send(serializeMessage(msg));
 }
 
 // 计算校验位（直接提取MsPlatformImpl::calcBit逻辑）
@@ -498,63 +672,100 @@ void QmlCppBridge::handleReceivedSerialData(const QByteArray& data)
 		return;
 	}
 
-	// 解析电压数据（对应命令码0x33）
-	if ((unsigned char)data[3] == 0x33) {
-		if (data.size() < 10) {
-			qDebug() << "Voltage data length error";
-			return;
-		}
+	// 解析电压数据（对应命令码0x05）
+	if ((unsigned char)data[3] == 0x05) {
+		//提取通道号
+		int channel = (int)data[5];
 
-		// 提取通道号和电压值
-		char volDatax[4] = { data[5], data[6], data[7], data[8] };
-		char volDatay[4] = { data[9], data[10], data[11], data[12] };
-		char volDataz[4] = { data[13], data[14], data[15], data[16] };
+		// 提取电压值
+		char volDatax[4] = { data[6], data[7], data[8], data[9] };
 		double voltagex = charToDouble(volDatax);
-		double voltagey = charToDouble(volDatay);
-		double voltagez = charToDouble(volDataz);
 		// 转发给QML
 		QVariantMap result;
 		result["method"] = "shakingtable.voltage";
-		result["x"] = voltagex;
-		result["y"] = voltagey;
-		result["z"] = voltagez;
+		result["chl"] = channel;
+		result["voltage"] = voltagex;
 		emit sendtoQml(result);
 	}
 
-	if ((unsigned char)data[3] == 0x0A) {
-		if (data.size() < 10) {
-			qDebug() << "Voltage data length error";
-			return;
-		}
+	if ((unsigned char)data[3] == 0x06) {
+		// 提取通道号
+		int channel = (int)data[5];
 
 		// 提取位移值
-		char posDatax[4] = { data[5], data[6], data[7], data[8] };
-		char posDatay[4] = { data[9], data[10], data[11], data[12] };
-		char posDataz[4] = { data[13], data[14], data[15], data[16] };
-
+		char posDatax[4] = { data[6], data[7], data[8], data[9] };
 		double posx = charToDouble(posDatax);
-		double posy = charToDouble(posDatay);
-		double posz = charToDouble(posDataz);
 
 		// 转发给QML
 		QVariantMap result;
 		result["method"] = "shakingtable.position";
-		result["x"] = posx;
-		result["y"] = posy;
-		result["z"] = posz;
+		result["chl"] = channel;
+		result["position"] = posx;
 		emit sendtoQml(result);
 	}
 	
 }
 
-void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
+void QmlCppBridge::handleReceivedNetworkData(const QByteArray& data, const QByteArray& cmd)
 {
 	//判断信号来自哪个sender
 	QObject* sender = QObject::sender();
 
+    int dataLen = data.length();
+	if (dataLen > 256)
+	{
+        return; // 数据长度超过限制，直接返回
+	}
+	LX_LOG_INFO("data length[%d]", dataLen);
+	char buffer[256] = {0};
+    for (int i = 0; i < dataLen; i++)
+    {
+        buffer[i] = data[i];
+    }
+
 	if (sender == m_switchMechanismNetMgr)
 	{
 		//todo:处理接收到的切换机构数据
+		sLinearOutData parseData;
+
+		m_linearGuiderailImpl->dataParse(buffer, dataLen, &parseData, 0);
+
+		if (parseData.registerAddr == 1004)//电机状态
+		{
+			QVariantMap result;
+			result["method"] = "switchmechanism.status";
+			
+			switch (parseData.otherStatus)
+			{
+			case 1:
+				result["gear"] = QStringLiteral("复位状态出错");
+				break;
+			case 2:
+				result["gear"] = QStringLiteral("正转时触发UP开关");
+				break;
+			case 3:
+				result["gear"] = QStringLiteral("反转时触碰UP开关");
+				break;
+			default:
+				result["gear"] = QStringLiteral("其他");
+				break;
+			}
+
+			switch (parseData.runningStatus)
+			{
+			case 1:
+				result["motorStatus"] = QStringLiteral("空闲状态");
+				break;
+			case 2:
+				result["motorStatus"] = QStringLiteral("运行状态");
+				break;
+			default:
+				result["motorStatus"] = QStringLiteral("未知状态");
+				break;
+			}
+
+			emit sendtoQml(result);
+		}
 		m_switchMissCount++;
 		if (!m_switchOnline)
 		{
@@ -564,11 +775,57 @@ void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
 			emit sendtoQml(map);
 			m_switchMissCount = 3;
 		}
-
 	}
 	else if (sender == m_filterWheelNetMgr)
 	{
 		//todo:处理接收到的滤光轮数据
+        sFilterOutData filterData;
+
+        m_filterWheelImpl->dataParse(buffer, dataLen, &filterData);
+
+		QVariantMap result;
+		result["method"] = "filterwheel.status";
+
+		// 处理电机状态
+		if (filterData.registerAddr == 0) // 读电机状态
+		{
+			switch (filterData.getValue)
+			{
+			case 0:
+				result["motorStatus"] = QStringLiteral("到达位置");
+				break;
+			case 1:
+				result["motorStatus"] = QStringLiteral("正在运行");
+				break;
+			case 2:
+				result["motorStatus"] = QStringLiteral("碰撞停");
+				break;
+			case 3:
+			case 4:
+				result["motorStatus"] = QStringLiteral("到达限位");
+				break;
+			default:
+				result["motorStatus"] = QStringLiteral("未知状态");
+				break;
+			}
+		}
+		// 处理电机档位
+		else if (filterData.registerAddr == 1) // 电机档位
+		{
+			if (std::abs(filterData.getValue - 2132) < 20)
+				result["gear"] = QStringLiteral("档位1");
+			else if (std::abs(filterData.getValue - 1066) < 20)
+				result["gear"] = QStringLiteral("档位2");
+			else if (std::abs(filterData.getValue - 6396) < 20)
+				result["gear"] = QStringLiteral("档位3");
+			else if (std::abs(filterData.getValue - 3189) < 20)
+				result["gear"] = QStringLiteral("档位4");
+			else if (std::abs(filterData.getValue - 4264) < 20)
+				result["gear"] = QStringLiteral("档位5");
+			else
+				result["gear"] = QStringLiteral("未知档位");
+		}
+
 		m_switchMissCount++;
 		if (!m_filterOnline)
 		{
@@ -581,7 +838,41 @@ void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
 	}
 	else if (sender == m_wavePlateNetMgr)
 	{
-		//todo:处理接收到的波片数据
+		// 处理接收到的波片数据
+		s2038OutData waveData;
+		m_stm2038BImpl->dataParse(buffer, dataLen, &waveData, 0);
+
+		QVariantMap result;
+		result["method"] = "waveplate.status";
+
+		// 电机位置
+		if (waveData.registerAddr == 968) // 电机位置
+		{
+			if (std::abs(waveData.getValue - 2382938) < 100)
+				result["gear"] = QStringLiteral("左旋");
+			else if (std::abs(waveData.getValue - 2451804) < 100)
+				result["gear"] = QStringLiteral("右旋");
+			else
+				result["gear"] = QStringLiteral("未知位置");
+		}
+		// 电机状态
+		else if (waveData.registerAddr == 897) // 电机状态
+		{
+			switch (waveData.positionStatus)
+			{
+			case 1:
+				result["motorStatus"] = QStringLiteral("定位完成");
+				break;
+			case 2:
+				result["motorStatus"] = QStringLiteral("正在定位");
+				break;
+			default:
+				result["motorStatus"] = QStringLiteral("未知状态");
+				break;
+			}
+		}
+		emit sendtoQml(result);
+
 		m_switchMissCount++;
 		if (!m_waveOnline)
 		{
@@ -592,6 +883,36 @@ void QmlCppBridge::handlReceivedNetworkData(const QByteArray& data)
 			m_switchMissCount = 3;
 		}
 	}
+}
+
+void  QmlCppBridge::handleReceivedServoData(const QByteArray& data)
+{
+	TtbRe reportMsg;
+
+	if (!reportMsg.ParseFromArray(data.constData(), data.size())) {
+		return;
+	}
+
+	// 基本信息
+	uint64_t runCount = reportMsg.run_count();
+	TtbMode currentMode = reportMsg.now_ttb_mode();
+
+	// 角度/速度
+	double angleX = reportMsg.get_ttb_angle_x();
+	double angleY = reportMsg.get_ttb_angle_y();
+	float velX = reportMsg.get_ttb_vel_x();
+	float velY = reportMsg.get_ttb_vel_y();
+
+	auto state = reportMsg.state();
+
+	QVariantMap report;
+	report["method"] = "servo.report";
+	//report["runCount"] = runCount;
+	report["currentMode"] = (int)currentMode;
+	report["angleX"] = angleX;
+	report["angleY"] = angleY;
+	report["statusCode"] = state.err_code();
+	emit sendtoQml(report);
 }
 
 void QmlCppBridge::ConfigAxis(int i, AxisClass* pAxis)
@@ -774,3 +1095,15 @@ void QmlCppBridge::onReceivedMsg(const QVariant& params)
         emit sendtoQml(params); // 直接传递原始 QVariant
     }
 }
+
+
+// 成员函数模板：将任意类型转换为字符串存储
+template <typename T>
+QByteArray QmlCppBridge::serializeMessage(const T& requestMsg) {
+	const size_t msgSize = requestMsg.ByteSizeLong();
+	QByteArray data;
+	data.resize(static_cast<int>(msgSize));
+	requestMsg.SerializeToArray(data.data(), data.size());
+	return data;
+}
+

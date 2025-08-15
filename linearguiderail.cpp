@@ -144,7 +144,7 @@ int LinearGuideRailImpl::getMotorStatus(int addr, char* outBuffer)
     return 8;
 }
 
-bool LinearGuideRailImpl::dataParse(char* buffer, int len, sOutData* outData, int registerValue)
+bool LinearGuideRailImpl::dataParse(char* buffer, int len, sLinearOutData* outData, int registerValue)
 {
     if (len < 5)
     {
@@ -160,7 +160,7 @@ bool LinearGuideRailImpl::dataParse(char* buffer, int len, sOutData* outData, in
 
         if (dataLen > len - 5)//5为校验2Bit + 地址1Bit + 功能码1Bit + 数据长度1Bit
         {
-            return false;
+            return false; 
         }
 
         //返回寄存器

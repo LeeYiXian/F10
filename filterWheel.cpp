@@ -162,6 +162,23 @@ int FilterWheelImpl::motorZeroing(int addr, char* outBuffer)
     return 21;
 }
 
+int FilterWheelImpl::setZeroing(int addr, char* outBuffer)
+{
+ 
+    outBuffer[0] = addr;
+    outBuffer[1] = 0x10;
+    outBuffer[2] = 0x00;
+    outBuffer[3] = 0x04;
+    outBuffer[4] = 0x00;
+    outBuffer[5] = 0x01;
+    outBuffer[6] = 0x02;
+    outBuffer[7] = 0x00;
+    outBuffer[8] = 0x00;
+    outBuffer[9] = 0xA7;
+    outBuffer[10] = 0xD4;
+    return 11;
+}
+
 int FilterWheelImpl::motorEnablement(int addr, char* outBuffer)
 {
     return 0;
@@ -238,7 +255,7 @@ void FilterWheelImpl::modBusCRC(const char* data, int cnt, char* outData)
 
 }
 
-bool FilterWheelImpl::dataParse(char* buffer, int len, sOutData* outData)
+bool FilterWheelImpl::dataParse(char* buffer, int len, sFilterOutData* outData)
 {
     if (len < 6)
     {

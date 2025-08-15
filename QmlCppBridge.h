@@ -10,11 +10,15 @@
 #include "axisclass.h"
 #include "Loggers.h"
 #include <atomic>
+#include "ServoUdp.h"
 #define AXISNUM 4
 class QmlCppBridge : public QObject {
     Q_OBJECT
 public:
     explicit QmlCppBridge(QObject* parent = nullptr);
+
+	template <typename T>
+	QByteArray serializeMessage(const T& requestMsg);
 signals:
     //zmq收到的数据传给qml展示
     void sendtoQml(const QVariant& data);
@@ -30,11 +34,15 @@ public slots:
 
     void handleReceivedSerialData(const QByteArray& data);
 
-    void handlReceivedNetworkData(const QByteArray& data);
+    void handleReceivedNetworkData(const QByteArray& data, const QByteArray& cmd);
+
+	void handleReceivedServoData(const QByteArray& data);
 
 	void onConnectStatus(bool status);
 public slots:
 	void onReceivedMsg(const QVariant& params);
+
+	void sendHeartbeat();
 public://支撑平台相关接口
 	void DmcInit();
 	void ConfigAxis(int i, AxisClass* pAxis);
@@ -92,4 +100,10 @@ private:
 	std::atomic<bool> m_filterOnline{ false };
 	std::atomic<bool> m_waveOnline{ false };
 	/*离线检测计数器*/
+
+	/*伺服通信类*/
+	ServoUdp* m_servoUdp;
+	/*伺服通信类*/
+	QTimer m_heartbeatTimer;
+	int m_hbCount = 0;
 };

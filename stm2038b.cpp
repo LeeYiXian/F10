@@ -247,7 +247,7 @@ int Stm2038bImpl::getMotorStatus(int addr, char* outBuffer)
     return 6;
 }
 
-bool Stm2038bImpl::dataParse(char* buffer, int len, sOutData* outData, int registerValue)
+bool Stm2038bImpl::dataParse(char* buffer, int len, s2038OutData* outData, int registerValue)
 {
     if (len < 5)
     {

@@ -3,6 +3,7 @@
 #include <QSerialPortInfo>
 #include <QFile>
 #include <QMetaEnum>
+#include <QThread>
 /**
  * @brief 串口类构造函数
  * @param parent 父对象指针
@@ -11,6 +12,11 @@
 SerialPort::SerialPort(QObject* parent)
     : QObject(parent), m_serial(new QSerialPort(this))
 {
+	QThread* serialThread = new QThread(this);
+	connect(serialThread, &QThread::finished, this, &QObject::deleteLater);
+	this->moveToThread(serialThread);
+    serialThread->start();
+
     // 连接串口数据接收信号
     connect(m_serial, &QSerialPort::readyRead, this, &SerialPort::handleReadyRead);
     // 连接串口错误信号
@@ -109,6 +115,7 @@ void SerialPort::sendData(const QByteArray& data)
     QMutexLocker locker(&m_mutex);
     if (m_serial->isOpen()) {
         m_serial->write(data);
+        m_serial->flush();
     }
 }
 

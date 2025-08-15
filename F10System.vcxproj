@@ -67,7 +67,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -82,6 +82,10 @@
     <ClCompile Include="protobuf\pb\ttb_control.pb.cc" />
     <ClCompile Include="QmlCppBridge.cpp" />
     <ClCompile Include="SerialPort.cpp" />
+    <QtMoc Include="ServoUdp.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </QtMoc>
     <ClCompile Include="stm2038b.cpp" />
     <None Include="CardPage.qml" />
     <None Include="LSControlPanel.qml" />
@@ -107,6 +111,7 @@
     <ClInclude Include="linearguiderailimpl.h" />
     <ClInclude Include="Loggers.h" />
     <ClInclude Include="protobuf\pb\ttb_control.pb.h" />
+    <QtMoc Include="ServoUdp.h" />
     <ClInclude Include="stm2038bimpl.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

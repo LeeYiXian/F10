@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QQueue>
 class NetworkManager : public QObject {
 	Q_OBJECT
 		Q_PROPERTY(bool connected READ isConnected NOTIFY connectionChanged)
@@ -21,15 +22,20 @@ public:
 	
 	void startReconnect();          // 启动重连定时器
 	void stopReconnect();           // 停止重连定时器
+
+	void sendNextInQueue();
+
 signals:
 	void connectionChanged(bool connected);
 	void errorOccurred(const QString& error);
-	void dataReceived(const QByteArray& data);
+	void dataReceived(const QByteArray& data, const QByteArray& cmd);
 	void socketReady();
 public slots:
 	void onSendData(const QByteArray& data);
 
 	void attemptReconnect();         // 定时器触发，尝试重连
+
+	void onSendTimeout();           // 发送超时，重新发送
 private slots:
 	void onConnected();
 	void onDisconnected();
@@ -41,6 +47,12 @@ private:
 	QTimer* m_reconnectTimer = nullptr;
 	QString m_ip;
 	int m_port;
+
+	//添加队列，用于存储发送的数据
+	QQueue<QByteArray> m_sendQueue;
+	bool m_waitingResponse = false;
+	QTimer* m_timeoutTimer;
+
 };
 
 #endif

@@ -1,24 +1,26 @@
 #pragma once
 
+struct s2038OutData
+{
+    int addr;   //电机地址
+    int functionId;//功能码
+    int registerAddr;//897-读取电机状态，968-实际步数
+    int registerNum;//寄存器数量
+
+    int getValue; //读取到的具体指（读电机状态时，改值无效）
+
+    //仅读电机状态时，下述字段有效
+    int positionStatus;  //定位状态: 1-定位完成，2定位正在处理
+    int positionOffset;  //定位误差：1-无误差 2-有误差
+
+};
+
 // 具体实现类
 class Stm2038bImpl
 {
 public:
 
-    struct sOutData
-    {
-        int addr;   //电机地址
-        int functionId;//功能码
-        int registerAddr;//897-读取电机状态，968-实际步数
-        int registerNum;//寄存器数量
-
-        int getValue; //读取到的具体指（读电机状态时，改值无效）
-
-        //仅读电机状态时，下述字段有效
-        int positionStatus;  //定位状态: 1-定位完成，2定位正在处理
-        int positionOffset;  //定位误差：1-无误差 2-有误差
-
-    };
+    
 
     typedef enum
     {
@@ -73,7 +75,7 @@ public:
     int getMotorStatus(int addr, char* outBuffer);
 
     //数据解析
-    bool dataParse(char* buffer, int len, sOutData* outData, int registerValue);
+    bool dataParse(char* buffer, int len, s2038OutData* outData, int registerValue);
 
     void modBusCRC(const char* data, int cnt, char* outData);
 

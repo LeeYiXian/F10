@@ -26,7 +26,7 @@ message TtbSetPos{
  
 enum TtbOperation {
      TTB_NO_CMD=0;                  // 无命令,定时发，充当心跳包
-     TTB_MODE=1;                    // 模式选择   
+     TTB_MODE=1;                    // 模式选择
      TTB_SET_VEL=2;                 // 设置转台速度
      TTB_SET_POS_X=4;               // 设置转台位置X
      TTB_SET_POS_Y=5;               // 设置转台位置Y
