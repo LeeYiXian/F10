@@ -102,28 +102,43 @@ void NetworkManager::onError(QAbstractSocket::SocketError error) {
 void NetworkManager::handleReadyRead()
 {
 	QByteArray data = m_socket->readAll();
-	
-	// 收到数据后，把队列头移除
-	if (m_waitingResponse && !m_sendQueue.isEmpty()) {
-		m_timeoutTimer->stop();
-		emit dataReceived(data, m_sendQueue.dequeue());
-		m_waitingResponse = false;
-		// 如果还有消息，继续发送下一条
-		if (!m_sendQueue.isEmpty()) {
-			sendNextInQueue();
-		}
-	}
+
+	emit dataReceived(data, 0);
+	/*同步等待逻辑*/
+	//QByteArray data = m_socket->readAll();
+	//
+	//// 收到数据后，把队列头移除
+	//if (m_waitingResponse && !m_sendQueue.isEmpty()) {
+	//	m_timeoutTimer->stop();
+	//	emit dataReceived(data, m_sendQueue.dequeue());
+	//	m_waitingResponse = false;
+	//	// 如果还有消息，继续发送下一条
+	//	if (!m_sendQueue.isEmpty()) {
+	//		sendNextInQueue();
+	//	}
+	//}
+	/*同步等待逻辑*/
 }
 
 void NetworkManager::onSendData(const QByteArray& data)
 {
-	// 先把数据加入队列
-	m_sendQueue.enqueue(data);
+	if (!m_connected || !m_socket) return;
 
-	// 如果当前没有等待响应，就发送队列头
-	if (!m_waitingResponse) {
-		sendNextInQueue();
-	}
+	qDebug() << "Send Data (" << data.size() << "bytes):" << data.toHex(' ').toUpper();
+
+	m_socket->write(data);
+	m_socket->flush();
+	QThread::msleep(100); // 延时100ms，等待数据发送完毕
+		
+	/*同步等待逻辑*/
+	// 先把数据加入队列
+	//m_sendQueue.enqueue(data);
+
+	//// 如果当前没有等待响应，就发送队列头
+	//if (!m_waitingResponse) {
+	//	sendNextInQueue();
+	//}
+	/*同步等待逻辑*/
 }
 
 void NetworkManager::sendNextInQueue()

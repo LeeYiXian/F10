@@ -163,15 +163,18 @@ int Stm2038bImpl::motorEnablement(int addr, char* outBuffer)
 int Stm2038bImpl::readMotorPosition(int addr, char* outBuffer)
 {
     outBuffer[0] = addr;
-    outBuffer[1] = 0x03;
+    outBuffer[1] = 0x04;
 
     outBuffer[2] = 0x03;
     outBuffer[3] = 0xC8;
 
     outBuffer[4] = 0x00;
-    outBuffer[5] = 0x01;
+    outBuffer[5] = 0x02;
 
-    return 6;
+    outBuffer[6] = 0xF0;
+    outBuffer[7] = 0x71;
+
+    return 8;
 }
 
 int Stm2038bImpl::motorZeroing(int addr, char* outBuffer)
@@ -244,7 +247,10 @@ int Stm2038bImpl::getMotorStatus(int addr, char* outBuffer)
     outBuffer[4] = 0x00;
     outBuffer[5] = 0x01;
 
-    return 6;
+    outBuffer[6] = 0xD4;
+    outBuffer[7] = 0x66;
+
+    return 8;
 }
 
 bool Stm2038bImpl::dataParse(char* buffer, int len, s2038OutData* outData, int registerValue)
@@ -257,19 +263,18 @@ bool Stm2038bImpl::dataParse(char* buffer, int len, s2038OutData* outData, int r
     outData->addr = buffer[0];
     outData->functionId = buffer[1];
 
-    if (0x03 == outData->functionId)
+    if (0x03 == outData->functionId )
     {
-        if (897 == registerValue)
-        {
-            int dataValue;
-            memcpy(&dataValue, buffer + 3, 2);
-            if ((dataValue >> 12 & 0x01) == 0)
+        
+            int dataValue = (buffer[3] << 8) | buffer[4];
+
+            if ((dataValue >> 10 & 0x01) == 0)
             {
-                outData->positionStatus = 1;
+                outData->positionStatus = 2;
             }
             else
             {
-                outData->positionStatus = 2;
+                outData->positionStatus = 1;
             }
 
             if ((dataValue >> 13 & 0x01) == 0)
@@ -280,17 +285,12 @@ bool Stm2038bImpl::dataParse(char* buffer, int len, s2038OutData* outData, int r
             {
                 outData->positionOffset = 2;
             }
-        }
-        else if (968 == registerValue)
-        {
-            memcpy(&outData->getValue, buffer + 3, 2);
-        }
+        
 
     }
-    else
+    else if(outData->functionId == 0x04)
     {
-        memcpy(&outData->registerAddr, buffer + 2, 2);
-        memcpy(&outData->registerNum, buffer + 4, 2);
+        outData->getValue = ((unsigned char)buffer[3] << 24) | ((unsigned char)buffer[4] << 16) | ((unsigned char)buffer[5] << 8) | (unsigned char)buffer[6];
     }
 
     return true;

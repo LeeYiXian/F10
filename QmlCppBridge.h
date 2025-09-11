@@ -11,6 +11,8 @@
 #include "Loggers.h"
 #include <atomic>
 #include "ServoUdp.h"
+#include "ProcessLauncher.h"
+#include "ConfigManager.h"
 #define AXISNUM 4
 class QmlCppBridge : public QObject {
     Q_OBJECT
@@ -29,6 +31,7 @@ signals:
 
 	void sendSerialData(const QByteArray& data);
 
+	void sgnDmcInit();
 public slots:
 	void sendtoCpp(const QVariant& data);
 
@@ -43,6 +46,10 @@ public slots:
 	void onReceivedMsg(const QVariant& params);
 
 	void sendHeartbeat();
+
+	void onDmcInit();
+
+	void onScreenShot();
 public://支撑平台相关接口
 	void DmcInit();
 	void ConfigAxis(int i, AxisClass* pAxis);
@@ -89,7 +96,7 @@ private:
 	AxisClass* pAxis[AXISNUM];
 	/*************************升降台 终*********************************/
 
-	QTimer* m_timer;
+	
 
 	/*离线检测计数器*/
 	std::atomic<int> m_switchMissCount{ 0 };
@@ -101,9 +108,15 @@ private:
 	std::atomic<bool> m_waveOnline{ false };
 	/*离线检测计数器*/
 
-	/*伺服通信类*/
+	/*伺服通信*/
 	ServoUdp* m_servoUdp;
-	/*伺服通信类*/
+	
 	QTimer m_heartbeatTimer;
+	QTimer m_receiveTimer;
 	int m_hbCount = 0;
+
+	/*伺服通信*/
+	ProcessLauncher m_processLauncher;
+	//快反镜FastMirrorController、光束质量分析仪BeamQualityAnalyzer、光偏振检测仪PolarizationAnalyzer
+	ConfigManager m_configManager;
 };

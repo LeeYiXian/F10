@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QMetaEnum>
 #include <QThread>
+#include "Loggers.h"
 /**
  * @brief 串口类构造函数
  * @param parent 父对象指针
@@ -12,15 +13,12 @@
 SerialPort::SerialPort(QObject* parent)
     : QObject(parent), m_serial(new QSerialPort(this))
 {
-	QThread* serialThread = new QThread(this);
-	connect(serialThread, &QThread::finished, this, &QObject::deleteLater);
-	this->moveToThread(serialThread);
-    serialThread->start();
-
     // 连接串口数据接收信号
     connect(m_serial, &QSerialPort::readyRead, this, &SerialPort::handleReadyRead);
     // 连接串口错误信号
     connect(m_serial, &QSerialPort::errorOccurred, this, &SerialPort::handleError);
+
+    connect(&m_reconnectTimer, &QTimer::timeout, this, &SerialPort::reconnectDevice);
     // 初始化时刷新可用串口列表
     refreshPorts();
 }
@@ -64,6 +62,7 @@ QStringList SerialPort::availablePorts() const
  */
 void SerialPort::connectDevice(const QString& portName, int baudRate)
 {
+    LX_LOG_INFO("SerialPort::connectDevice,portName:%s, baudRate:%d", portName.toStdString().c_str(), baudRate);
     if (portName.isEmpty())
     {
         emit errorOccurred(QString::fromLocal8Bit("未选择设备"));  // 发送错误信息
@@ -74,6 +73,9 @@ void SerialPort::connectDevice(const QString& portName, int baudRate)
         emit errorOccurred(tr("Port already opened"));
         return;
     }
+
+    m_portName = portName;
+    m_baudRate = baudRate;
 
     // 配置串口参数
     m_serial->setPortName(portName);          // 设置端口名
@@ -88,7 +90,31 @@ void SerialPort::connectDevice(const QString& portName, int baudRate)
         emit connectionChanged(true);  // 发送连接成功信号
     }
     else {
-        emit errorOccurred(m_serial->errorString());  // 发送错误信息
+        emit connectionChanged(false);  // 发送连接成功信号
+        m_reconnectTimer.start(3000);  // 尝试重新连接5秒后失败
+    }
+}
+
+void SerialPort::reconnectDevice()
+{
+    LX_LOG_INFO("SerialPort::reconnectDevice,m_portName:%s, m_baudRate:%d", m_portName.toStdString().c_str(), m_baudRate);
+    m_serial->close(); // 先关闭，确保状态干净
+	// 配置串口参数
+	m_serial->setPortName(m_portName);          // 设置端口名
+	m_serial->setBaudRate(m_baudRate);          // 设置波特率
+	m_serial->setDataBits(QSerialPort::Data8);  // 8位数据位
+	m_serial->setParity(QSerialPort::NoParity); // 无校验位
+	m_serial->setStopBits(QSerialPort::OneStop);// 1位停止位
+	m_serial->setFlowControl(QSerialPort::NoFlowControl); // 无流控
+
+	// 尝试以读写模式打开串口
+	if (m_serial->open(QIODevice::ReadWrite)) {
+		emit connectionChanged(true);  // 发送连接成功信号
+        m_reconnectTimer.stop();
+	}
+    else
+    {
+        emit connectionChanged(false);  // 发送连接成功信号
     }
 }
 
@@ -113,9 +139,11 @@ void SerialPort::disconnectDevice()
 void SerialPort::sendData(const QByteArray& data)
 {
     QMutexLocker locker(&m_mutex);
+    LX_LOG_INFO("SerialPort::sendData %s", data.toHex().data());
     if (m_serial->isOpen()) {
         m_serial->write(data);
         m_serial->flush();
+        //QThread::msleep(100);
     }
 }
 
@@ -127,6 +155,7 @@ void SerialPort::handleReadyRead()
 {
     //处理温度改变传值
     QByteArray data = m_serial->readAll();
+    LX_LOG_INFO("SerialPort::handleReadyRead %s", data.toHex().data());
     if (!data.isEmpty()) {
         emit dataReceived(data);
     }
@@ -139,8 +168,15 @@ void SerialPort::handleReadyRead()
  */
 void SerialPort::handleError(QSerialPort::SerialPortError error)
 {
-	const QMetaEnum metaEnum = QMetaEnum::fromType<QSerialPort::SerialPortError>();
-	emit errorOccurred(metaEnum.valueToKey(error));
+    LX_LOG_INFO("SerialPort::handleError %d", error);
+	if (error == QSerialPort::ResourceError) {
+        if (!m_reconnectTimer.isActive())
+        {
+            m_reconnectTimer.start(3000);  // 每3秒尝试重新连接
+            emit connectionChanged(false);  // 发送连接成功信号
+        }
+            
+	}
 }
 
 /**

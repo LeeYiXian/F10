@@ -146,8 +146,8 @@ void AxisClass::startMovDistance(double dDistance ,POSMODE posi_mode)
                 m_wCard, m_wAxis, m_AxisParam.dStartSpeed, m_AxisParam.dSpeed,
                 m_AxisParam.dAccTime, m_AxisParam.dDecTime, m_AxisParam.dStopSpeed ,result);
     //设定S段时间
-    result = dmc_set_s_profile(m_wCard,m_wAxis,0,m_AxisParam.dSParaTime);
-    LX_LOG_INFO("[dmc_set_s_profile] axis = %hu, sParaTime = %f ,returned %d", m_wAxis,m_AxisParam.dSParaTime ,result);
+	result = dmc_set_s_profile(m_wCard, m_wAxis, 0, m_AxisParam.dSParaTime);
+	LX_LOG_INFO("[dmc_set_s_profile] axis = %hu, sParaTime = %f ,returned %d", m_wAxis, m_AxisParam.dSParaTime, result);
     //点动(位置模式)
     result =  dmc_pmove_unit(m_wCard, m_wAxis, m_AxisParam.dDistance, posi_mode);
     LX_LOG_INFO("[dmc_pmove_unit] axis = %hu, m_dDistance = %f ,posi_mode =%d ,returned %d",
@@ -167,24 +167,29 @@ void AxisClass::startMoveRealTime(double dSpeed, MoveCommand moveCommand)
         }
         return;
     }
+
     if (dmc_check_done(m_wCard, m_wAxis) == 0) // 已经在运动中
     {
         LX_LOG_INFO("m_wAxis=%d is moving", m_wAxis);
         return;
     }
+
     if (dmc_set_profile_unit(m_wCard, m_wAxis, m_AxisParam.dStartSpeed,
                              dSpeed, m_AxisParam.dAccTime,
                              m_AxisParam.dDecTime, m_AxisParam.dStopSpeed) != 0)
     {
         LX_LOG_INFO("dmc_set_profile_unit failed");
     }
+
     LX_LOG_INFO("[dmc_set_profile_unit] card = %hu, axis = %hu, startSpeed = %f, speed = %f, accTime = %f, decTime = %f, stopSpeed = %f",
                 m_wCard, m_wAxis, m_AxisParam.dStartSpeed, dSpeed,
                 m_AxisParam.dAccTime, m_AxisParam.dDecTime, m_AxisParam.dStopSpeed);
+
     if(dmc_set_s_profile(m_wCard, m_wAxis, 0, m_AxisParam.dSParaTime) != 0)
     {
         LX_LOG_INFO("dmc_set_s_profile failed");
     }
+
     if (moveCommand == MoveCommand::Positive)
     {
         if(dmc_vmove(m_wCard, m_wAxis, 0))
@@ -370,7 +375,6 @@ void AxisClass::getLimitData(Limit &mLimit)
 
 int AxisClass::checkLimit(double &distance)
 {
-
     int ret = 0;
    if (distance < m_AxisParam.nMinlimit)
     {
@@ -391,7 +395,6 @@ int AxisClass::checkLimit(double &distance)
        ret = 2;
    }
     return ret;
-
 }
 
 int AxisClass::checkRealPoseLimit()

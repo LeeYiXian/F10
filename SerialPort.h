@@ -6,7 +6,7 @@
 #include <QSerialPort>
 #include <QStringList>
 #include <QMutex>
-
+#include <QTimer>
 /**
  * @brief 串口通信类，封装了Qt的串口通信功能
  *
@@ -51,6 +51,7 @@ public slots:
      */
     Q_INVOKABLE void connectDevice(const QString& portName, int baudRate);
 
+    Q_INVOKABLE void reconnectDevice();
     /**
      * @brief 断开串口设备
      */
@@ -118,6 +119,9 @@ private:
     QSerialPort* m_serial;        // 串口对象指针
     QMutex m_mutex;              // 互斥锁，用于线程安全
     QStringList m_availablePorts; // 可用串口列表
+	QString m_portName;
+    int m_baudRate;
+    QTimer m_reconnectTimer;              // 定时器，用于刷新可用串口列表
 };
 
 #endif // SERIALCONNECTION_H

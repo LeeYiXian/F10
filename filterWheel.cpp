@@ -8,7 +8,7 @@ int FilterWheelImpl::readMotorPosition(int addr, char* outBuffer)
     outBuffer[1] = 0x03;//功能码
 
     outBuffer[2] = 0x00;//寄存器地址
-    outBuffer[3] = 0x00;
+    outBuffer[3] = 0x01;
 
     outBuffer[4] = 0x00;//寄存器个数
     outBuffer[5] = 0x02;
@@ -224,7 +224,7 @@ int FilterWheelImpl::getMotorStatus(int addr, char* outBuffer)
 
     //校验位
     char calcData[2];
-    modBusCRC(outBuffer, 11, calcData);
+    modBusCRC(outBuffer, 6, calcData);
     outBuffer[6] = calcData[0];
     outBuffer[7] = calcData[1];
 
@@ -269,8 +269,18 @@ bool FilterWheelImpl::dataParse(char* buffer, int len, sFilterOutData* outData)
 
     if (outData->functionId == 0x03)
     {
-        int datalen = buffer[2];
-        memcpy(&outData->getValue, buffer + 3, datalen);
+        if (len == 7)//实际步数
+        {
+            outData->registerAddr = 0;
+            outData->getValue = (buffer[3] << 8) | buffer[4];
+        }
+        else if( len == 9)//实际步数
+        {
+            outData->registerAddr = 1;
+            outData->getValue = ((unsigned char)buffer[3] << 24) | ((unsigned char)buffer[4] << 16) | ((unsigned char)buffer[5] << 8) | (unsigned char)buffer[6];
+            //outData->getValue = (unsigned int)((buffer[3] << 24) | (buffer[4] << 16) | (buffer[5] << 8) | buffer[6]);
+        }
+
     }
     else if (outData->functionId == 0x06 || outData->functionId == 0x10)
     {

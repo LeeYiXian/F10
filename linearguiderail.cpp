@@ -131,7 +131,10 @@ int LinearGuideRailImpl::getMotorStatus(int addr, char* outBuffer)
     outBuffer[1] = 0x03;
 
     int nRegister = 1004;
-    memcpy(outBuffer + 2, &nRegister, 2);
+    //memcpy(outBuffer + 2, &nRegister, 2);
+
+	outBuffer[2] = (nRegister >> 8) & 0xFF;
+	outBuffer[3] = nRegister & 0xFF;
 
     outBuffer[4] = 0x00;
     outBuffer[5] = 0x01;
@@ -166,12 +169,13 @@ bool LinearGuideRailImpl::dataParse(char* buffer, int len, sLinearOutData* outDa
         //返回寄存器
         outData->registerAddr = registerValue;
 
-        if (1004 == registerValue)
-        {
+		/*if (1)
+		{*/
 
             int status = 0;
 
-            memcpy(&status, buffer + 3, dataLen);
+            //memcpy(&status, buffer + 3, dataLen);
+            status =(buffer[3] << 8) | buffer[4];
             if (0xFF == status)
             {
                 outData->powerOnStatus = 1;
@@ -183,7 +187,7 @@ bool LinearGuideRailImpl::dataParse(char* buffer, int len, sLinearOutData* outDa
             {
                 outData->runningStatus = 1;
             }
-            else if ((status & 0x0007) == 7)
+            else if ((status & 0x0007) >= 1 || (status & 0x0007) <= 7)
             {
                 outData->runningStatus = 2;
             }
@@ -198,26 +202,26 @@ bool LinearGuideRailImpl::dataParse(char* buffer, int len, sLinearOutData* outDa
                 outData->resetStatus = 2;
             }
 
-            if (((status && 0x00F0) >> 4) == 1)
+            if (((status & 0x00F0) >> 4) == 1)
             {
                 outData->otherStatus = 1;
             }
-            else if (((status && 0x00F0) >> 4) == 6)
+            else if (((status & 0x00F0) >> 4) == 6)
             {
                 outData->otherStatus = 2;
             }
-            else if (((status && 0x00F0) >> 4) == 7)
+            else if (((status & 0x00F0) >> 4) == 7)
             {
                 outData->otherStatus = 3;
             }
 
-        }
-        else
+        //}
+        /*else
         {
             int dataValue = 0;
             memcpy(&dataValue, buffer + 3, dataLen);
             outData->getValue = dataValue;
-        }
+        }*/
     }
     else if (0x06 == outData->functionId)
     {
@@ -241,7 +245,7 @@ void LinearGuideRailImpl::modBusCRC(const char* data, int cnt, char* outData)
     int dataSize = cnt;
     for (int i = 0; i < dataSize; i++)//（5）重复步骤2~4
     {
-        LX_LOG_INFO("data [%d] [%02x] cnt[%d]",i, data[i], cnt);
+        //LX_LOG_INFO("data [%d] [%02x] cnt[%d]",i, data[i], cnt);
         CRC = CRC ^ (unsigned char)data[i];//(2)数据与CRC异或
         for (int j = 0; j < 8; j++)//（4）重复8次步骤3
         {
@@ -255,7 +259,7 @@ void LinearGuideRailImpl::modBusCRC(const char* data, int cnt, char* outData)
                 CRC >>= 1;
         }
     }
-    LX_LOG_INFO("data  [%04x] ", CRC);
+    //LX_LOG_INFO("data  [%04x] ", CRC);
     // 转换为4位十六进制字符串并存储到char数组
     memcpy(outData, &CRC, 2);
     return;
