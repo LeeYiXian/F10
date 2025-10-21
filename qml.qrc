@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/qt/qml/f10system">
-        <file>main.qml</file>
-        <file>image/app.png</file>
-    </qresource>
-</RCC>
