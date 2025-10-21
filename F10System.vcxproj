@@ -57,30 +57,13 @@
       <AdditionalIncludeDirectories>.\qxtGlobal;.\ltdmc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
-      <Command>@echo off
-REM === 目标目录 ===
-set TARGET=$(ProjectDir)x64\Release
-
-REM === 创建目标目录（如果不存在） ===
-if not exist "%TARGET%" (
-    mkdir "%TARGET%"
-)
-
-REM === 拷贝 ltdmc\lib64 下的 DLL ===
+      <Command>set TARGET=$(ProjectDir)x64\Release
 xcopy /y /d /r "$(ProjectDir)ltdmc\lib64\*.dll" "%TARGET%\"
-
-REM === 拷贝 protobuf\libprotobuf 下的 DLL ===
 xcopy /y /d /r "$(ProjectDir)protobuf\libprotobuf\*.dll" "%TARGET%\"
-
-REM === 拷贝 QML 文件 ===
 xcopy /y /d /r "$(ProjectDir)*.qml" "%TARGET%\"
-
-REM === 拷贝 image 文件夹及全部内容 ===
 xcopy /y /d /r /e "$(ProjectDir)image" "%TARGET%\image\"
-
-"%QTDIR%\bin\windeployqt.exe" "%TARGET%\F10System.exe" --release --qmldir "$(ProjectDir)"
-
-</Command>
+xcopy /y /d /r "$(ProjectDir)config.ini" "%TARGET%\"
+"D:\Qt\5.15.2\msvc2019_64\bin\windeployqt.exe" "%TARGET%\F10System.exe" --release --qmldir "$(ProjectDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
